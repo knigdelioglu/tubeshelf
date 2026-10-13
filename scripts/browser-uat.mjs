@@ -92,12 +92,32 @@ async function start(){
   socket.addEventListener("error",reject,{once:true});
  });
  cdp=new CDP(socket);
- const extensionId=await until(async()=>{
+ const extension=await until(async()=>{
   const targets=await cdp.send("Target.getTargets");
   const worker=targets.targetInfos?.find(t=>t.url?.startsWith("chrome-extension://")&&t.url.includes("background.js"));
-  return worker?.url.match(/^chrome-extension:\/\/([a-z]{32})\//)?.[1];
+  const id=worker?.url.match(/^chrome-extension:\\/\\/([a-z]{32})\\//)?.[1];
+  return id&&worker?.targetId?{id,workerTargetId:worker.targetId}:null;
  },"MV3 background worker");
- const page=await cdp.send("Target.createTarget",{url:"chrome-extension://"+extensionId+"/index.html"});
+ // An extension dashboard must be opened by the extension itself.
+ // Browser CDP Target.createTarget may deny extension-page navigation.
+ const workerSession=(await cdp.send("Target.attachToTarget",{
+  targetId:extension.workerTargetId,flatten:true
+ })).sessionId;
+ await cdp.send("Runtime.enable",{},workerSession);
+ const manifestCheck=await cdp.send("Runtime.evaluate",{
+  expression:"chrome.runtime.getManifest().name",returnByValue:true
+ },workerSession);
+ assert.ok(String(manifestCheck.result?.value??"").includes("TubeShelf"),"Unexpected extension worker");
+ const opened=await cdp.send("Runtime.evaluate",{
+  expression:"chrome.tabs.create({url:chrome.runtime.getURL('index.html')}).then(t=>t.id)",
+  awaitPromise:true,returnByValue:true
+ },workerSession);
+ if(opened.exceptionDetails)throw new Error("Extension cannot open dashboard: "+opened.exceptionDetails.text);
+ const page=await until(async()=>{
+  const targets=await cdp.send("Target.getTargets");
+  return targets.targetInfos?.find(t=>t.type==="page"&&
+   t.url?.startsWith("chrome-extension://"+extension.id+"/index.html"));
+ },"extension-created TubeShelf dashboard");
  const target=await cdp.send("Target.attachToTarget",{targetId:page.targetId,flatten:true});
  session=target.sessionId;
  await cdp.send("Runtime.enable",{},session);
@@ -113,7 +133,7 @@ async function start(){
   console.error("CHROME TARGETS:",JSON.stringify(targets.targetInfos?.map(t=>({type:t.type,url:t.url,attached:t.attached}))));
   throw err;
  }
- return extensionId;
+ return extension.id;
 }
 async function evaluate(body){return cdp.evaluate(session,body);}
 async function api(message){
