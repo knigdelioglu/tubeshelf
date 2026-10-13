@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.8.0 — Performans, veri bütünlüğü ve Chrome dayanıklılığı (güvenilirlik paketi)**
+**v0.9.0 — Gerçek Chromium kabul testi ve 0.8 performans/güvenilirlik doğrulaması**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -164,3 +164,9 @@ TubeShelf artık **Benim Merkezim** sayfasıyla açılır. Eski Video panosu, Ak
 - **Performans/regresyon testleri:** 2.000 kanallı yenileme önceliklendirmesi, 100 işlik eşzamanlı görev kuyruğu, hata sonrası kuyruk ilerlemesi ve büyük ağ yanıtlarını reddetme testleri.
 
 **Sınırlar:** Bunlar otomatik ve mimari testlerdir; gerçek Google hesabında tüm kanal yayınlarının erişilebilirliği, Shorts sınıflandırmasının doğruluğu, Chrome servisi durup yeniden başladığında ağ işlemleri ve farklı tarayıcı profillerinde restore davranışı ayrıca manuel UAT gerektirir. Chrome MV3 background worker her zaman çalışmayı garanti etmez.
+
+## Tarayıcı kabul testi (v0.9.0)
+
+\`npm run verify\` komutunun ardından \`npm run test:browser\` ile **gerçek başsız Chromium** ortamında dağıtılacak MV3 paketi yüklenir. Test; ilk açılış, arayüzden grup oluşturma, kanal/grup atama, izleme kuyruğu ve konum, okundu ve sessize alma, tam yedek alma/önizleme/silme/geri yükleme ve **Chromium kapatılıp aynı profil açıldığında verinin korunması** akışlarını içerir. Ek Playwright bağımlılığı kullanmaz; Node 22 ve Chrome DevTools Protocol ile çalışır. CI testinde gerçek YouTube hesabına giriş veya Google kimlik doğrulama yoktur.
+
+UAT başarısızsa GitHub Actions uygun olduğunda \`tubeshelf-browser-uat-failure\` ekran görüntüsü oluşturur. Kurulu YouTube hesabıyla gerçek abonelik listesinin eksiksiz çekilmesi, Shorts/canlı yayın etiketleri, web oynatıcı davranışı, bildirim izinleri ve farklı Chrome profillerinde taşıma için ayrıca manuel UAT gerekir.

@@ -1,12 +1,13 @@
 {
   "name": "tubeshelf",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "test:browser": "node scripts/browser-uat.mjs",
     "build": "vite build && node scripts/extension-build.mjs",
     "verify": "npm run check && npm run test && npm run build"
   },
