@@ -25,12 +25,17 @@ export function useVideoFeed(groupId:string|null,revision:number){
  },[groupId]);
  useEffect(()=>{
   let active=true;
-  setFeed(null);setError("");
-  void get().then(next=>{if(active)setFeed(next);}).catch(e=>{if(active)setError(String(e));});
-  // A cached group does not cause extra network activity during the next 30 minutes.
-  void request({type:"VIDEO_REFRESH",groupId}).then(result=>{
-   if(active&&result.ok&&"feed" in result)setFeed(result.feed);
-  }).catch(e=>{if(active)setError(e instanceof Error?e.message:String(e));});
+  setFeed(null);setError("");setBusy(true);
+  // Sequential loading prevents a stale VIDEO_GET response from overwriting newer feeds.
+  void (async()=>{
+   try{
+    const cached=await get();
+    if(active)setFeed(cached);
+    const result=await request({type:"VIDEO_REFRESH",groupId});
+    if(active&&result.ok&&"feed" in result)setFeed(result.feed);
+   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
+   finally{if(active)setBusy(false);}
+  })();
   function focused(){
    void get().then(result=>{if(active)setFeed(result);}).catch(()=>undefined);
   }
