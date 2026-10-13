@@ -1,3 +1,5 @@
+import {centerAction,checkGroupNotifications} from "./center-service";
+import type {CenterRequest} from "./center-types";
 import {watchAction} from "./watch-service";
 import type {WatchRequest} from "./watch-types";
 import {smartAction,announceSmartChange} from "./smart-service";
@@ -20,6 +22,12 @@ async function directSession(sender:chrome.runtime.MessageSender,token?:string){
 }
 chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:unknown)=>void)=>{
  if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED"||raw.type==="SMART_UPDATED"||raw.type==="WATCH_UPDATED")return false;
+ if(raw.type==="CENTER_ANALYTICS_GET"||raw.type==="CENTER_NOTIFICATION_GET"||
+    raw.type==="CENTER_NOTIFICATION_CONFIGURE"){
+  void centerAction(raw as CenterRequest).then(sendResponse).catch(err=>
+   sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
+  return true;
+ }
  if(raw.type==="SMART_FEED_GET"||raw.type==="SMART_FEED_REFRESH"||
     raw.type==="SMART_READ_SET"||raw.type==="SMART_READ_ALL"||raw.type==="SMART_MUTE_SET"){
   void smartAction(raw as SmartVideoRequest).then(sendResponse).catch(err=>
@@ -107,26 +115,39 @@ void configureAutomaticSync().catch(()=>undefined);
 
 const SMART_ALARM="tubeshelf-smart-refresh";
 async function configureSmartRefresh():Promise<void>{
- const {smartAutoRefreshEnabled}=await chrome.storage.local.get("smartAutoRefreshEnabled");
- if(smartAutoRefreshEnabled===true){
+ const data=await chrome.storage.local.get(["smartAutoRefreshEnabled","centerNotificationsV1"]);
+ const needsAlarm=data.smartAutoRefreshEnabled===true||data.centerNotificationsV1?.enabled===true;
+ if(needsAlarm){
   if(!await chrome.alarms.get(SMART_ALARM))await chrome.alarms.create(SMART_ALARM,{periodInMinutes:60});
  }else await chrome.alarms.clear(SMART_ALARM);
 }
 chrome.runtime.onStartup.addListener(()=>{void configureSmartRefresh();});
 chrome.runtime.onInstalled.addListener(()=>{void configureSmartRefresh();});
 chrome.storage.onChanged.addListener((changes,area)=>{
- if(area==="local"&&"smartAutoRefreshEnabled" in changes)void configureSmartRefresh();
+ if(area==="local"&&("smartAutoRefreshEnabled" in changes||"centerNotificationsV1" in changes))void configureSmartRefresh();
 });
 chrome.alarms.onAlarm.addListener(alarm=>{
  if(alarm.name!==SMART_ALARM)return;
  void (async()=>{
-  const {smartAutoRefreshEnabled}=await chrome.storage.local.get("smartAutoRefreshEnabled");
-  if(smartAutoRefreshEnabled!==true)return;
+  const data=await chrome.storage.local.get(["smartAutoRefreshEnabled","centerNotificationsV1"]);
+  if(data.smartAutoRefreshEnabled!==true&&data.centerNotificationsV1?.enabled!==true)return;
   const result=await smartAction({type:"SMART_FEED_REFRESH",groupId:null});
   if(!result.ok)throw new Error(result.error);
+  if(data.centerNotificationsV1?.enabled===true)await checkGroupNotifications();
   await chrome.storage.local.remove("smartRefreshError");
  })().catch(async e=>{
   await chrome.storage.local.set({smartRefreshError:e instanceof Error?e.message:"Yenileme başarısız."});
  });
 });
 void configureSmartRefresh().catch(()=>undefined);
+
+chrome.notifications.onClicked.addListener(id=>{
+ if(!id.startsWith("tubeshelf-group:"))return;
+ const groupId=id.slice("tubeshelf-group:".length).split(":")[0];
+ if(!groupId)return;
+ try{
+  const decoded=decodeURIComponent(groupId);
+  const params=new URLSearchParams({view:"feed",group:decoded});
+  void chrome.tabs.create({url:chrome.runtime.getURL("index.html")+"#"+params.toString()});
+ }catch{/* Invalid or stale notification identifiers are ignored. */}
+});

@@ -4,14 +4,14 @@ import {groupChannelCounts} from "./groups";
 import {useWatchState} from "./useWatchState";
 import type {SmartFeed} from "./smart-types";
 interface Props {
- catalog:Catalog; active:string|null;view:"inbox"|"feed"|"board"|"manage"|"queue"; onSelect:(id:string|null)=>void;
- onInbox:()=>void;onQueue:()=>void;onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
+ catalog:Catalog; active:string|null;view:"home"|"inbox"|"feed"|"board"|"manage"|"queue"; onSelect:(id:string|null)=>void;
+ onHome:()=>void;onInbox:()=>void;onQueue:()=>void;onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
  onCreate:(name:string,parentId:string|null)=>void;
  onRename:(id:string,name:string)=>void; onDelete:(id:string)=>void;
  onDropChannel:(groupId:string,channelId:string)=>void;
  onMoveGroup:(id:string,parentId:string|null)=>void;
 }
-export function Sidebar({catalog,active,view,onSelect,onInbox,onQueue,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
+export function Sidebar({catalog,active,view,onSelect,onHome,onInbox,onQueue,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
  const [name,setName]=useState(""),[asRoot,setAsRoot]=useState(false);
  const counts=useMemo(()=>groupChannelCounts(catalog),[catalog]);
  const {state:watchState}=useWatchState();
@@ -86,6 +86,9 @@ export function Sidebar({catalog,active,view,onSelect,onInbox,onQueue,onBoard,on
  return <aside className="sidebar">
   <div className="brand"><div className="brand-mark">▶</div><div><strong>TubeShelf</strong><small>Abonelik yöneticisi</small></div></div>
   <div className="nav-label">KÜTÜPHANE</div>
+  <button className={"all-button "+(view==="home"?"active":"")} onClick={onHome}>
+   ▦ <span>Benim merkezim</span>
+  </button>
   <button className={"all-button "+(view==="inbox"?"active":"")} onClick={onInbox}>
    ◉ <span>Yeni videolar</span>{Boolean(cachedFeed?.unreadCount)&&<span className="unread-pill">{cachedFeed?.unreadCount}</span>}
   </button>

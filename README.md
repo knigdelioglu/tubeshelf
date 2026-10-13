@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.5.0 — İzleme kuyruğu, yerel oynatma ilerlemesi, kaldığın yerden devam etme, kısayollar ve odak modu**
+**v0.6.0 — Kişisel YouTube Merkezi: özelleştirilebilir pano, grup önerileri, kanal etkinliği ve isteğe bağlı grup bildirimleri**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -120,3 +120,18 @@ YouTube arayüzünde sağlanan bağlantılar gruba özel TubeShelf video akış�
 - **Odak modu:** Kuyruk sayfasında TubeShelf kenar menüsü ve çoklu liste görünümünü kapatarak yalnızca sıradaki öğeye odaklanır; F ile geri dönülür.
 - **Gömülü oynatıcı sınırı:** YouTube'un iframe oynatıcısının gerçek ilerleme verisi eklentiye otomatik gelmez. Bu nedenle gömülü oynatıcıda ilerleme kaydı varmış gibi davranılmaz; kullanıcı tamamlandı işareti koyabilir veya YouTube'da açıp ilerlemeyi kaydedebilir. Bazı videolar iframe içinde oynatılamayabilir.
 - **Veri koruma:** Veritabanı şeması v3→v4 yükselir ve mevcut grup, video önbelleği, izlenme/okunma, sessiz kanal bilgilerini silmez. Kuyruk/ilerleme yereldir; mevcut yalnızca grup verisi içeren JSON yedeğine henüz eklenmemiştir.
+
+## Kişisel YouTube Merkezi (v0.6.0)
+
+TubeShelf artık **Benim Merkezim** sayfasıyla açılır. Eski Video panosu, Akıllı Akış, Kanal yönetimi ve İzleme kuyruğu aynen korunur.
+
+- **Özelleştirilebilir ana pano:** Grupları yıldızla sabitleyip yukarı/aşağı taşı, 1–3 sütun ve grup başına 3/6/9 video seç, sabitlenmemiş grupları isteğe bağlı gizle. Tercihler `chrome.storage.local` içinde bu tarayıcıda tutulur.
+- **Açıklanabilir grup önerileri:** Kanal adlarını ve daha önce okunmuş son video başlıklarını mevcut grup adları ve konu terimleriyle eşleştirir. Önerilerin hiçbiri otomatik uygulanmaz; **Gruba ekle** düğmesine tıklaman gerekir. Yapay zekâ modeline veri gönderilmez.
+- **Kanal etkinlik analizi:** 30 gün içinde görülen yayınlar, eldeki en son video tarihi, taraması başarısız veya hiç yapılmamış kanallar. Bu istatistikler bütün YouTube geçmişini değil, erişilebilir Atom yayın önbelleğini temsil eder; “90+ gün” etiketi kesin hareketsizlik iddiası değildir.
+- **Seçili grup bildirimleri:** Önce grupları işaretle, ardından **Bildirimleri etkinleştir** düğmesine bas. Chrome, isteğe bağlı bildirim izni sorar. Eklenti tarayıcı açıkken saatte bir video kontrolü yapar, yalnızca ilk etkinleştirmeden sonra keşfedilen ve yerel olarak yeni sayılan yayınları grup başına en fazla bir özet bildirimde birleştirir. Önceden görülmüş video kimlikleri tekrar bildirilmez. Bildirime tıklamak grup video akışını açar.
+- Bildirim izni verilmezse veya grup seçilmezse özellik etkinleşmez; varsayılanı kapalıdır. Tarayıcı kapalıyken arka plan çalışması garanti edilmez. Bildirim zamanı ve kapsamı yerel cache ile ağ erişimine bağlıdır.
+- **Yerel veri korunur:** IndexedDB şeması v4 olarak kalır; grup, kuyruk, okunma ve izleme verileri değiştirilmez. Pano/bildirim tercihleri mevcut JSON grup yedeğine henüz dahil değildir.
+
+### Doğrulama
+
+`npm ci && npm run verify` komutu TypeScript denetimi, Vitest testleri ve Manifest V3 üretim derlemesini çalıştırır. Yeni arayüzde gerçek Chrome/YouTube UAT testi ayrı gerekir.
