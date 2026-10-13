@@ -102,7 +102,17 @@ async function start(){
  session=target.sessionId;
  await cdp.send("Runtime.enable",{},session);
  await cdp.send("Page.enable",{},session);
- await until(()=>evaluate('return !!document.querySelector(".center-workspace");'),"TubeShelf rendered home");
+ try{
+  await until(()=>evaluate('return !!document.querySelector(".center-workspace");'),"TubeShelf rendered home");
+ }catch(err){
+  let pageInfo;
+  try{pageInfo=await evaluate('return ({url:location.href,readyState:document.readyState,title:document.title,body:document.body?.innerText?.slice(0,1400),html:document.documentElement.outerHTML.slice(0,500),chrome:!!globalThis.chrome?.runtime?.id});');}
+  catch(e){pageInfo={error:String(e)};}
+  console.error("INITIAL PAGE DIAGNOSTICS:",JSON.stringify(pageInfo));
+  const targets=await cdp.send("Target.getTargets").catch(()=>({targetInfos:[]}));
+  console.error("CHROME TARGETS:",JSON.stringify(targets.targetInfos?.map(t=>({type:t.type,url:t.url,attached:t.attached}))));
+  throw err;
+ }
  return extensionId;
 }
 async function evaluate(body){return cdp.evaluate(session,body);}
