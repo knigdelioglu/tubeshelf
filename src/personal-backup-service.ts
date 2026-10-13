@@ -2,9 +2,7 @@ import type {Catalog} from "./types";
 import type {PersonalBackup,RestorePreview} from "./personal-backup-domain";
 import {buildPersonalBackup,parsePersonalBackup} from "./personal-backup-domain";
 import {readCatalog,connect} from "./db";
-import {getWatchState} from "./watch-db";
-import {getSmartState} from "./smart-db";
-import {getWatchedVideoIds} from "./video-db";
+import {readPersonalSnapshot} from "./personal-snapshot-db";
 import {normalizeCenterPrefs,normalizeNotifications} from "./center-domain";
 import {validateFilter} from "./smart-domain";
 import {handle,withCatalogLock} from "./service";
@@ -44,16 +42,17 @@ function personalSettings(values:Record<string,unknown>,catalog:Catalog){
  };
 }
 async function exportAll():Promise<PersonalBackup>{
- const [catalog,watch,smart,watched,settings]=await Promise.all([
-  readCatalog(),getWatchState(),getSmartState(),getWatchedVideoIds(),chrome.storage.local.get(null)
+ const [snapshot,settings]=await Promise.all([
+  readPersonalSnapshot(),chrome.storage.local.get(null)
  ]);
- const preferences=personalSettings(settings,catalog);
+ const preferences=personalSettings(settings,snapshot.catalog);
  const pack=buildPersonalBackup({
-  catalog,watchedVideoIds:watched.filter(id=>ID.test(id)),
-  readVideoIds:smart.readIds.filter(id=>ID.test(id)),
-  mutedChannelIds:smart.mutedChannelIds,
-  inboxBaseline:smart.baseline,
-  queue:watch.queue,progress:watch.progress,
+  catalog:snapshot.catalog,
+  watchedVideoIds:snapshot.watchedVideoIds.filter(id=>ID.test(id)),
+  readVideoIds:snapshot.readVideoIds.filter(id=>ID.test(id)),
+  mutedChannelIds:snapshot.mutedChannelIds,
+  inboxBaseline:snapshot.inboxBaseline,
+  queue:snapshot.watch.queue,progress:snapshot.watch.progress,
   preferences
  });
  return parsePersonalBackup(pack).data; // Validate the exported file before offering it.
@@ -74,6 +73,7 @@ async function rewriteIndexedDb(data:PersonalBackup):Promise<void>{
    for(const id of data.readVideoIds)tx.objectStore("inboxRead").put(Date.now(),id);
    for(const id of data.mutedChannelIds)tx.objectStore("mutedChannels").put(Date.now(),id);
    tx.objectStore("smartMeta").put(data.inboxBaseline,"baseline");
+   tx.objectStore("smartMeta").put(crypto.randomUUID(),"videoCacheEpoch");
    tx.objectStore("watchQueue").put(data.queue,"current");
    for(const record of data.progress)tx.objectStore("playbackProgress").put(record,record.videoId);
   }catch(e){try{tx.abort();}catch{};done(e instanceof Error?e:new Error(String(e)));}

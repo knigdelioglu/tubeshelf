@@ -51,7 +51,10 @@ function schedule():void{
  if(timer!==undefined)return;
  timer=window.setTimeout(()=>{timer=undefined;mount();},400);
 }
-new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+// Ignore frequent YouTube card mutations while the injected guide is intact.
+new MutationObserver(()=>{
+ if(!host?.isConnected)schedule();
+}).observe(document.documentElement,{childList:true,subtree:true});
 window.addEventListener("yt-navigate-finish",schedule);
 chrome.runtime.onMessage.addListener((message:unknown)=>{
  if(message&&typeof message==="object"&&"type" in message&&message.type==="CATALOG_CHANGED")void refresh();

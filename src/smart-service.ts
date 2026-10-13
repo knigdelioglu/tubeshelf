@@ -2,7 +2,8 @@ import type {Catalog,Channel} from "./types";
 import type {ChannelVideoCache,VideoFeedItem} from "./video-types";
 import type {SmartFeed,SmartVideo,SmartVideoRequest,SmartVideoResponse} from "./smart-types";
 import {readCatalog} from "./db";
-import {getAllVideoCaches,getWatchedVideoIds,putVideoCache} from "./video-db";
+import {getAllVideoCaches,getWatchedVideoIds,putVideoCache,readVideoCacheEpoch} from "./video-db";
+import {globalFeedWork} from "./refresh-coordinator";
 import {getSmartState,setMuteState,setReadState} from "./smart-db";
 import {isUnread} from "./smart-domain";
 import {channelsInGroup} from "./groups";
@@ -12,6 +13,7 @@ const REFRESH_INTERVAL=30*60*1000;
 const BATCH_LIMIT=12;
 const VIDEO_ID=/^[A-Za-z0-9_-]{11}$/;
 const pending=new Map<string,Promise<SmartFeed>>();
+
 
 function scopedChannels(c:Catalog,groupId:string|null,muted:Set<string>):Channel[]{
  if(groupId!==null&&!c.groups.some(g=>g.id===groupId))throw new Error("Grup bulunamadı.");
@@ -78,15 +80,13 @@ async function refresh(groupId:string|null,force:boolean):Promise<SmartFeed>{
  const byChannel=new Map(caches.map(x=>[x.channelId,x]));
  const eligible=chooseRefreshChannels(channels,byChannel,force);
  const candidates=eligible.slice(0,BATCH_LIMIT);
- let index=0;
- const workers=Array.from({length:Math.min(3,candidates.length)},async()=>{
-  while(index<candidates.length){
-   const channel=candidates[index++]!;
-   const cache=await loadChannelVideos(channel,byChannel.get(channel.id));
-   await putVideoCache(cache);
-  }
- });
- await Promise.all(workers);
+ const epoch=await readVideoCacheEpoch();
+ // Coalesce the same channel across overlapping group and all-channel refreshes.
+ // An epoch check in the IndexedDB write prevents stale fetches after restore.
+ await Promise.all(candidates.map(channel=>globalFeedWork.run(epoch+":"+channel.id,async()=>{
+  const cache=await loadChannelVideos(channel,byChannel.get(channel.id));
+  await putVideoCache(cache,epoch);
+ })));
  const result=await snapshot(groupId,{attempted:candidates.length,remaining:Math.max(0,eligible.length-candidates.length)});
  announceSmartChange();
  return result;

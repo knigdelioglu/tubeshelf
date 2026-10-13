@@ -2,11 +2,12 @@ import type {Catalog,Channel} from "./types";
 import type {ChannelVideoCache,FeedSnapshot,VideoRequest,VideoResponse,VideoFeedItem} from "./video-types";
 import {readCatalog} from "./db";
 import {channelsInGroup} from "./groups";
-import {getAllVideoCaches,getWatchedVideoIds,putVideoCache,setWatched} from "./video-db";
+import {getAllVideoCaches,getWatchedVideoIds,putVideoCache,readVideoCacheEpoch,setWatched} from "./video-db";
 import {loadChannelVideos} from "./video-network";
+import {globalFeedWork} from "./refresh-coordinator";
 
 const REFRESH_MS=30*60*1000;
-const BATCH=50;
+const BATCH=12;
 const VIDEO_ID=/^[A-Za-z0-9_-]{11}$/;
 const feedRequests=new Map<string,Promise<FeedSnapshot>>();
 function scope(c:Catalog,groupId:string|null):Channel[]{
@@ -48,15 +49,11 @@ async function refresh(groupId:string|null,force=false):Promise<FeedSnapshot>{
   const newer=records.get(b.id)?.updatedAt??"";
   return older.localeCompare(newer);
  }).slice(0,BATCH);
- let index=0;
- const workers=Array.from({length:Math.min(5,stale.length)},async()=>{
-  while(index<stale.length){
-   const channel=stale[index++]!;
-   const fresh=await loadChannelVideos(channel,records.get(channel.id));
-   await putVideoCache(fresh);
-  }
- });
- await Promise.all(workers);
+ const epoch=await readVideoCacheEpoch();
+ await Promise.all(stale.map(channel=>globalFeedWork.run(epoch+":"+channel.id,async()=>{
+  const fresh=await loadChannelVideos(channel,records.get(channel.id));
+  await putVideoCache(fresh,epoch);
+ })));
  return snapshot(groupId);
 }
 export async function videoAction(req:VideoRequest):Promise<VideoResponse>{

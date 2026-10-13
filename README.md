@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.7.0 — Tam kişisel yedekleme, önizlemeli güvenli geri yükleme ve eski yedeklerle uyumluluk**
+**v0.8.0 — Performans, veri bütünlüğü ve Chrome dayanıklılığı (güvenilirlik paketi)**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -153,3 +153,14 @@ TubeShelf artık **Benim Merkezim** sayfasıyla açılır. Eski Video panosu, Ak
 **Eski grup yedekleri:** Önceki sürümlerde indirilen, yalnızca kanal/grup içeren JSON dosyaları da desteklenir. Bunlar *yalnızca* kanal ve grupları değiştirir; kuyruk, izleme geçmişi, okunma ve diğer kişisel ayarları silmez.
 
 **Önemli:** Dosyada kişisel kanal ve izleme tercihleriniz bulunur; paylaşmadan önce inceleyin. Eklentiyi kaldırmadan önce yedek almak en güvenli yöntemdir.
+
+## Güvenilirlik ve performans denetimi (v0.8.0)
+
+- **Ortak kanal indirme kuyruğu:** Akıllı Akış ve eski video servisleri aynı genel sınırı kullanır; aynı kanal için aynı veri sürümünde eşzamanlı istekler tek ağ işinde birleştirilir. En fazla üç kanal paralel yüklenir. Böylece birden fazla grup/pano açık olduğunda aşırı istek ve tekrarlı tarama azaltılır.
+- **Yedek geri yükleme güvenliği:** Tam yedek geri yüklemede önbellek sürümü tek IndexedDB işlemi içinde değiştirilir. Eski ağ isteği sonradan tamamlanırsa, sürüm uyuşmazlığı yüzünden yeni video önbelleğine yazamaz. Bu kontrol ağ işinin tamamlanmasına değil, yazmanın kendisine uygulanır.
+- **Tutarlı tam yedek dışa aktarma:** Kanal/grup, kuyruk, oynatma konumu, okunma, izlenme ve sessiz kanal kayıtları tek IndexedDB okuma işlemiyle alınır. Chrome ayarlarının kendisi ayrı depolandığı için veritabanı/ayarlar arasında tam atomiklik garanti edilmez.
+- **Yanıt boyutu sınırı:** YouTube XML ve kanal HTML yanıtları akış halinde en fazla 2 MiB okunur; beklenmedik derecede büyük yanıtlar kontrollü hata verir. Geçerli eski video önbelleği korunur.
+- **YouTube sayfası dayanıklılığı:** Abonelik aktarma sekmesi kapatılırsa yarım kalan işlem kullanıcıya hata olarak gösterilir. Yeniden aktarım, önceki YouTube sekmesi artık yoksa bloke edilmez. Sol menü DOM gözlemcisi YouTube'un ilgisiz değişikliklerinde yeniden montaj yapmaz.
+- **Performans/regresyon testleri:** 2.000 kanallı yenileme önceliklendirmesi, 100 işlik eşzamanlı görev kuyruğu, hata sonrası kuyruk ilerlemesi ve büyük ağ yanıtlarını reddetme testleri.
+
+**Sınırlar:** Bunlar otomatik ve mimari testlerdir; gerçek Google hesabında tüm kanal yayınlarının erişilebilirliği, Shorts sınıflandırmasının doğruluğu, Chrome servisi durup yeniden başladığında ağ işlemleri ve farklı tarayıcı profillerinde restore davranışı ayrıca manuel UAT gerektirir. Chrome MV3 background worker her zaman çalışmayı garanti etmez.

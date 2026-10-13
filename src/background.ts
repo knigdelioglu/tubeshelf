@@ -162,3 +162,15 @@ chrome.notifications?.onClicked?.addListener(id=>{
   void chrome.tabs.create({url:chrome.runtime.getURL("index.html")+"#"+params.toString()});
  }catch{/* Invalid or stale notification identifiers are ignored. */}
 });
+
+/** A closed YouTube tab must not leave the dashboard stuck in "scanning". */
+chrome.tabs.onRemoved.addListener(tabId=>{
+ void (async()=>{
+  const {directImportStatus}=await chrome.storage.local.get("directImportStatus");
+  if(directImportStatus?.tabId!==tabId||!["opening","scanning"].includes(directImportStatus.state))return;
+  await chrome.storage.local.set({directImportStatus:{
+   ...directImportStatus,state:"error",
+   error:"Aboneliklerin okunacağı YouTube sekmesi kapatıldı. Yeniden deneyebilirsiniz."
+  }});
+ })().catch(()=>undefined);
+});
