@@ -169,6 +169,18 @@ try{
  const group=catalog.groups.find(g=>g.name==="UAT Test Group");
  assert.ok(group,"UI click must create a real catalog group");
  console.log("PASS: Group creation via keyboard input and UI click");
+
+ // Test a stale import left by a closed YouTube tab, without a logged-in account.
+ await evaluate('await chrome.storage.local.set({directImportStatus:{state:"scanning",count:7,startedAt:Date.now(),tabId:999999,token:"abandoned"}});return true;');
+ await api({type:"DIRECT_IMPORT_START"});
+ const importStatus=await evaluate('return (await chrome.storage.local.get("directImportStatus")).directImportStatus;');
+ assert.equal(importStatus.state,"opening");
+ assert.notEqual(importStatus.tabId,999999);
+ await evaluate('await chrome.tabs.remove('+importStatus.tabId+');return true;');
+ await until(()=>evaluate('return (await chrome.storage.local.get("directImportStatus")).directImportStatus?.state==="error";'),
+  "closed import tab reports actionable error",10000);
+ console.log("PASS: Abandoned YouTube import can restart, closed tab reports error");
+
  const channelId="UC"+"x".repeat(22),videoId="AbCdEf12345";
  await api({type:"CATALOG_IMPORT",channels:[{id:channelId,title:"UAT Channel"}]});
  await api({type:"MEMBERSHIP_SET",groupId:group.id,channelIds:[channelId],enabled:true});

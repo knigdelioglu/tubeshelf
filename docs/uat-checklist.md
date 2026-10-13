@@ -1,12 +1,12 @@
 # TubeShelf – Gerçek YouTube Kullanıcı Kabul Kontrol Listesi
 
-Sürüm: 0.9.0. Başlamadan önce **Tam yedek indir** ile bir kopya al. Testleri gerçek abonelik verinle yapacağın için grupları silmek yerine geçici `UAT` grubu kullan.
+Sürüm: 0.9.1. Başlamadan önce **Tam yedek indir** ile bir kopya al. Testleri gerçek abonelik verinle yapacağın için grupları silmek yerine geçici `UAT` grubu kullan.
 
 | Kimlik | Senaryo | Beklenen davranış |
 |---|---|---|
 | UAT-01 | Chrome eklentisini güncelle, yeniden yükle | Benim Merkezim görünür, mevcut gruplar kaybolmaz |
 | UAT-02 | YouTube'dan kanalları getir | Kanal sayısı artar, yükleme ilerlemesi görünür, eski gruplar korunur |
-| UAT-03 | Tarama sürerken YouTube sekmesini kapat | İşlem hata ile sonlanır ve yeniden denenebilir |
+| UAT-03 | Tarama sürerken YouTube sekmesini kapat | İşlem hata ile sonlanır ve yeni aktarım başlatılabilir; yarım liste kaydedilmez |
 | UAT-04 | 200–500 aboneyle Akıllı Akış'ı art arda aç | En fazla 12 kanal/tur yenilenir; çift istekler birleşir; ekran donmaz |
 | UAT-05 | İki farklı grubun akışını aç | Yalnızca o grupların kanalları yer alır |
 | UAT-06 | Shorts / canlı / izlenen filtrelerini ayrı ayrı dene | Bilinmeyen içerik türü uydurulmaz |

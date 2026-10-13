@@ -74,6 +74,10 @@ async function beginDirectImport():Promise<void>{
  }catch{/* A normal YouTube visit should never display extension errors. */}
 }
 window.setTimeout(()=>{void beginDirectImport();},900);
+// YouTube uses single-page navigation: a content script initially loaded on
+// another route must still detect the import page after navigation.
+window.addEventListener("yt-navigate-finish",()=>{window.setTimeout(()=>{void beginDirectImport();},350);});
+window.addEventListener("popstate",()=>{window.setTimeout(()=>{void beginDirectImport();},350);});
 
 /** Local watch position. Only normal YouTube playback in visible tabs is measured. */
 const lastProgress=new Map<string,number>();

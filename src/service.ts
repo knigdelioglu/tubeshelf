@@ -32,18 +32,24 @@ async function mutate(update:(c:Catalog)=>Catalog|Promise<Catalog>):Promise<Cata
 export async function handle(message:Request):Promise<Catalog>{
  switch(message.type){
   case "CATALOG_GET":return withCatalogLock(readCatalog);
-  case "DIRECT_IMPORT_START":{
+  case "DIRECT_IMPORT_START":return withCatalogLock(async()=>{
+   // Serialize startup: two clicks must never create two simultaneous imports.
    const prior=(await chrome.storage.local.get("directImportStatus")).directImportStatus;
-   if(prior&&["opening","scanning"].includes(prior.state)&&Date.now()-prior.startedAt<160000){
-    throw new Error("YouTube abonelik aktarımı zaten devam ediyor.");
+   if(prior&&["opening","scanning"].includes(prior.state)&&
+      typeof prior.startedAt==="number"&&Date.now()-prior.startedAt<160000){
+    const tab=typeof prior.tabId==="number"?await chrome.tabs.get(prior.tabId).catch(()=>null):null;
+    const url=tab?.pendingUrl??tab?.url??"";
+    if(url.startsWith("https://www.youtube.com/feed/channels")){
+     throw new Error("YouTube abonelik aktarımı zaten devam ediyor.");
+    }
    }
    const tab=await chrome.tabs.create({url:"https://www.youtube.com/feed/channels",active:true});
    if(typeof tab.id!=="number")throw new Error("YouTube sekmesi açılamadı.");
    await chrome.storage.local.set({directImportStatus:{
     state:"opening",count:0,startedAt:Date.now(),tabId:tab.id,token:crypto.randomUUID()
    }});
-   return withCatalogLock(readCatalog);
-  }
+   return readCatalog();
+  });
   case "OPEN_DASHBOARD":{
    const params=new URLSearchParams({view:message.view==="feed"?"feed":"board"});
    if(message.groupId)params.set("group",message.groupId);

@@ -72,7 +72,13 @@ export async function loadChannelVideos(channel:Channel,previous?:ChannelVideoCa
    }
   }
   if(!parts.length)throw new Error("YouTube kanala ait yayın döndürmedi.");
-  const videos=mergeFeedKinds(parts).slice(0,75);
+  // Public feeds expose only a moving window. A partial/blocked refresh must not
+  // discard recently observed videos or previously verified Shorts/live kinds.
+  const cutoff=Date.parse(fetchedAt)-45*86400000;
+  const retained=(previous?.videos??[]).filter(video=>
+   video.channelId===channel.id&&Number.isFinite(Date.parse(video.publishedAt))&&
+   Date.parse(video.publishedAt)>=cutoff);
+  const videos=mergeFeedKinds([...parts,retained]).slice(0,75);
   return {channelId:channel.id,canonicalId:id,updatedAt:fetchedAt,attemptedAt:fetchedAt,consecutiveFailures:0,videos,
    ...(missing.length?{error:"Bazı video türleri doğrulanamadı: "+missing.join(", ")}:{})};
  }catch(e){

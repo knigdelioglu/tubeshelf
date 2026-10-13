@@ -5,7 +5,7 @@ for(const name of ["background","content"]){
 }
 const oauthId=process.env.YOUTUBE_OAUTH_CLIENT_ID?.trim();
 const manifest={
- manifest_version:3,name:"TubeShelf – YouTube Subscription Manager",short_name:"TubeShelf",version:"0.9.0",
+ manifest_version:3,name:"TubeShelf – YouTube Subscription Manager",short_name:"TubeShelf",version:"0.9.1",
  description:"YouTube aboneliklerini gruplara ayır; yerel olarak sakla.",
  permissions:["storage","identity","alarms"],
  optional_permissions:["notifications"],

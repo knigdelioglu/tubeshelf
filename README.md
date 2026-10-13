@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.9.0 — Gerçek Chromium kabul testi ve 0.8 performans/güvenilirlik doğrulaması**
+**v0.9.1 — YouTube aktarım kurtarması, kısmi video önbelleği koruması ve genişletilmiş Chrome kabul testi**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -170,3 +170,12 @@ TubeShelf artık **Benim Merkezim** sayfasıyla açılır. Eski Video panosu, Ak
 \`npm run verify\` komutunun ardından \`npm run test:browser\` ile **gerçek başsız Chromium** ortamında dağıtılacak MV3 paketi yüklenir. Test; ilk açılış, arayüzden grup oluşturma, kanal/grup atama, izleme kuyruğu ve konum, okundu ve sessize alma, tam yedek alma/önizleme/silme/geri yükleme ve **Chromium kapatılıp aynı profil açıldığında verinin korunması** akışlarını içerir. Ek Playwright bağımlılığı kullanmaz; Node 22 ve Chrome DevTools Protocol ile çalışır. CI testinde gerçek YouTube hesabına giriş veya Google kimlik doğrulama yoktur.
 
 UAT başarısızsa GitHub Actions uygun olduğunda \`tubeshelf-browser-uat-failure\` ekran görüntüsü oluşturur. Kurulu YouTube hesabıyla gerçek abonelik listesinin eksiksiz çekilmesi, Shorts/canlı yayın etiketleri, web oynatıcı davranışı, bildirim izinleri ve farklı Chrome profillerinde taşıma için ayrıca manuel UAT gerekir.
+
+## YouTube entegrasyonu sağlamlaştırma (v0.9.1)
+
+- **Abonelik aktarımı yeniden deneme:** Önceki aktarım sekmesi kapanmış veya başka sayfaya geçmişse eski `opening/scanning` kaydı yeni bir aktarımı gereksiz yere engellemez. Gerçekten açık YouTube abonelik sekmesinde ise yinelenen aktarım engellenir; eşzamanlı tıklamalar tek oturum açar.
+- **Tek sayfalı YouTube gezinmesi:** İçerik betiği başka bir YouTube sayfasında çalışmaya başladıysa, sonradan `/feed/channels` adresine geçildiğinde aktarım oturumunu tekrar kontrol eder.
+- **Eksik RSS yayınları:** Bir güncelleme geçici olarak yalnızca birkaç video döndürüyorsa, önceki önbelleğin son 45 günde yayımlanmış geçerli videoları en fazla 75 öğelik kanal sınırı içinde korunur. Önceden doğrulanmış Shorts/canlı etiketleri, yeni genel RSS'nin `unknown` türüne indirgenmez. Bu yaklaşım YouTube'dan silinmiş içerikleri kısa süre daha listede tutabilir; video arşivi veya tüm hesap geçmişi değildir.
+- **Regresyon ve Chrome testi:** Stale tab, canlı aktarım, yanlış sekmeye geçiş, çift tıklama, kısmi akışın önbelleği koruması ve eski önbelleğin süresi gibi senaryolar test kapsamına alındı. Chrome for Testing kabul testi de kapanan aktarım sekmesinden kurtarmayı sınar.
+
+**Gerçek hesap doğrulaması:** Eklentinin henüz kullanıcının oturum açtığı YouTube'da 200–500 kanallı eksiksiz listeyle test edilmediği unutulmamalı. Kapsamlı canlı hesap UAT tamamlanmadan 1.0 kararlı etiketi verilmemeli.
