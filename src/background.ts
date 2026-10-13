@@ -1,3 +1,5 @@
+import {watchAction} from "./watch-service";
+import type {WatchRequest} from "./watch-types";
 import {smartAction,announceSmartChange} from "./smart-service";
 import type {SmartVideoRequest} from "./smart-types";
 import {videoAction} from "./video-service";
@@ -17,7 +19,7 @@ async function directSession(sender:chrome.runtime.MessageSender,token?:string){
  return session;
 }
 chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:unknown)=>void)=>{
- if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED"||raw.type==="SMART_UPDATED")return false;
+ if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED"||raw.type==="SMART_UPDATED"||raw.type==="WATCH_UPDATED")return false;
  if(raw.type==="SMART_FEED_GET"||raw.type==="SMART_FEED_REFRESH"||
     raw.type==="SMART_READ_SET"||raw.type==="SMART_READ_ALL"||raw.type==="SMART_MUTE_SET"){
   void smartAction(raw as SmartVideoRequest).then(sendResponse).catch(err=>
@@ -30,6 +32,16 @@ chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:
    sendResponse(response);
   }).catch(err=>
    sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
+  return true;
+ }
+ if(raw.type==="WATCH_GET"||raw.type==="WATCH_QUEUE_ADD"||raw.type==="WATCH_QUEUE_REMOVE"||
+    raw.type==="WATCH_QUEUE_MOVE"||raw.type==="WATCH_QUEUE_CLEAR"||
+    raw.type==="WATCH_PROGRESS_SET"||raw.type==="WATCH_PROGRESS_RESET"||raw.type==="WATCH_COMPLETE"){
+  void watchAction(raw as WatchRequest).then(response=>{
+   if((raw.type==="WATCH_PROGRESS_SET"||raw.type==="WATCH_COMPLETE")&&response.ok&&
+      response.state.progress.some((p:{videoId:string;completed:boolean})=>p.videoId===raw.videoId&&p.completed))announceSmartChange();
+   sendResponse(response);
+  }).catch(err=>sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
   return true;
  }
  const message=raw as DirectMessage;

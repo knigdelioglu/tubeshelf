@@ -5,12 +5,15 @@ import {DEFAULT_FILTER,selectVideos,validateFilter} from "./smart-domain";
 import {channelsInGroup} from "./groups";
 import {useSmartFeed} from "./useSmartFeed";
 import {SmartVideoCard} from "./SmartVideoCard";
+import {useWatchState} from "./useWatchState";
 type Mode="inbox"|"feed"|"board";
 interface Props {catalog:Catalog;groupId:string|null;mode:Mode;onOpenGroup:(id:string)=>void}
 
 export function SmartWorkspace({catalog,groupId,mode,onOpenGroup}:Props){
  const scope=mode==="feed"?groupId:null;
  const {feed,busy,error,refresh,action,markWatched}=useSmartFeed(scope,catalog.revision);
+ const {state:watchState,add:enqueue,error:queueError}=useWatchState();
+ const queuedIds=useMemo(()=>new Set(watchState.queue.map(v=>v.id)),[watchState.queue]);
  const storageKey="smartFilter:v1:"+mode+":"+(scope??"all");
  const [filter,setFilter]=useState<SmartFilter>({...DEFAULT_FILTER});
  const [playing,setPlaying]=useState<SmartVideo|null>(null);
@@ -70,7 +73,8 @@ export function SmartWorkspace({catalog,groupId,mode,onOpenGroup}:Props){
   if(!video.read)void action({type:"SMART_READ_SET",videoId:video.id,read:true});
  }
  function cards(items:SmartVideo[]){
-  return <div className="video-grid">{items.map(v=><SmartVideoCard key={v.id} video={v}
+  return <div className="video-grid">{items.map(v=><SmartVideoCard key={v.id} video={v} queued={queuedIds.has(v.id)}
+   onQueue={v=>{void enqueue(v);}}
    onPlay={readVideo}
    onRead={(videoId,read)=>{void action({type:"SMART_READ_SET",videoId,read});}}
    onWatched={(videoId,watched)=>{void markWatched(videoId,watched);}}
@@ -144,7 +148,7 @@ export function SmartWorkspace({catalog,groupId,mode,onOpenGroup}:Props){
    {feed.lastBatch?" · Bu tur "+feed.lastBatch.attempted+" kanal denendi":""}
    {feed.updatedAt?" · Son kayıt "+new Date(feed.updatedAt).toLocaleString("tr-TR"):""}
   </p>}
-  {(error||controlsError||refreshError)&&<div className="notice error" role="alert">{error||controlsError||refreshError}</div>}
+  {(error||controlsError||refreshError||queueError)&&<div className="notice error" role="alert">{error||controlsError||refreshError||queueError}</div>}
   {feed?.errors.length?<details className="feed-details"><summary>Kaynak sorunları ve belirsiz video türleri</summary>
    <ul>{feed.errors.map((msg,i)=><li key={i}>{msg}</li>)}</ul>
    <p>Shorts ve canlı sınıflandırması resmî olmayan yayınlara bağlıdır; kaynak erişilemiyorsa kesin sonuç verilmez.</p>

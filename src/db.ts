@@ -3,9 +3,9 @@ import {emptyCatalog} from "./groups";
 const DB_NAME="tubeshelf", STORE="catalog";
 export function connect():Promise<IDBDatabase> {
  return new Promise((resolve,reject)=>{
-  const req=indexedDB.open(DB_NAME,3);
+  const req=indexedDB.open(DB_NAME,4);
   req.onupgradeneeded=()=>{
-   for(const store of [STORE,"feeds","watched","inboxRead","mutedChannels","smartMeta"])if(!req.result.objectStoreNames.contains(store))req.result.createObjectStore(store);
+   for(const store of [STORE,"feeds","watched","inboxRead","mutedChannels","smartMeta","watchQueue","playbackProgress"])if(!req.result.objectStoreNames.contains(store))req.result.createObjectStore(store);
   };
   req.onsuccess=()=>resolve(req.result);
   req.onerror=()=>reject(req.error??new Error("Veritabanı açılamadı."));

@@ -94,3 +94,43 @@
   background:#30343d;color:#e2e7ed;border-color:#454c58}
  .smart-actions label{color:#b5bfcc}.mute-row{border-color:#444b55}
 }
+
+/* v0.5 - Local watch queue and focus playback */
+.queue-toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.queue-toolbar button,.queue-side>button{border:1px solid #d9dfe7;border-radius:9px;padding:10px 14px;background:#fff;color:inherit;font-weight:650}
+.queue-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(240px,1fr);gap:19px;align-items:start}
+.queue-list{background:#fff;border:1px solid #e1e5ed;border-radius:14px;overflow:hidden}
+.queue-row{padding:10px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #edf0f4}
+.queue-row:last-child{border-bottom:0}.queue-row.queue-selected{background:#fff4f4}
+.queue-item-main{flex:1;min-width:0;display:flex;gap:11px;align-items:center;border:0;background:transparent;color:inherit;text-align:left}
+.queue-item-main img{width:120px;max-width:32%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:none}
+.queue-item-main>span{flex:1;min-width:0}.queue-item-main strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px}
+.queue-item-main small{display:block;color:#9097a4;margin-top:6px;font-size:11px}
+.queue-progress-bar{display:block;width:100%;height:4px;background:#e1e5eb;border-radius:8px;margin-top:8px;overflow:hidden}
+.queue-progress-bar>span{display:block;height:100%;background:#d63b3b;transition:width .15s}
+.queue-controls{display:flex;gap:3px}
+.queue-controls button{background:transparent;border:1px solid transparent;color:#6d7684;border-radius:6px;padding:7px;font-weight:700}
+.queue-controls button:hover:not(:disabled){border-color:#dce0e7;background:#f3f4f6}
+.queue-side{background:#fff;border:1px solid #e3e6ed;border-radius:14px;padding:19px;display:flex;flex-direction:column;gap:12px}
+.queue-side h2{font-size:19px;margin:0}.queue-preview{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:9px}
+.queue-side strong{font-size:15px;line-height:1.4}.queue-side p{color:#8a929e;font-size:12px;margin:0;line-height:1.6}
+.queue-side .video-refresh{color:#fff;background:#e13a3a;border-color:#e13a3a}
+.queue-help{border-top:1px solid #e3e6ed;padding-top:12px}
+.queue-help kbd{border-radius:4px;padding:2px 4px;background:#eee;color:#555}
+.tubeshelf-focus .sidebar,.tubeshelf-focus .view-switcher{display:none}
+.tubeshelf-focus .main{max-width:1200px}
+.queue-workspace.focus-mode .queue-layout{grid-template-columns:minmax(0,680px);justify-content:center}
+.queue-workspace.focus-mode .queue-list{display:none}
+.queue-workspace.focus-mode .videos-heading{max-width:680px;margin-inline:auto}
+.queue-workspace.focus-mode .queue-side{padding:25px}
+.queue-workspace.focus-mode .queue-help{display:block}
+.smart-card-actions button:disabled{opacity:.6}
+@media(max-width:850px){.queue-layout{grid-template-columns:1fr}.queue-side{order:-1}.queue-item-main img{width:105px}}
+@media(prefers-color-scheme:dark){
+ .queue-list,.queue-side{background:#24272d;border-color:#3b424b}
+ .queue-row{border-color:#3b424b}.queue-row.queue-selected{background:#463034}
+ .queue-controls button{color:#aeb8c5}
+ .queue-toolbar button,.queue-side>button{background:#30343c;border-color:#454a55;color:#e3e8ef}
+ .queue-help kbd{background:#3b414b;color:#e3e8ef}
+ .queue-progress-bar{background:#434955}
+}

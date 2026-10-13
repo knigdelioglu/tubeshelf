@@ -72,21 +72,27 @@ async function beginDirectImport():Promise<void>{
 }
 window.setTimeout(()=>{void beginDirectImport();},900);
 
-/** Local watch state, recorded only after actual playback progress in the main YouTube player. */
-const markedOnPage=new Set<string>();
-document.addEventListener("timeupdate",event=>{
- const video=event.target;
- if(!(video instanceof HTMLVideoElement)||!video.matches("video.html5-main-video"))return;
- if(document.visibilityState!=="visible"||video.paused||video.seeking)return;
- const path=location.pathname;
- const id=path==="/watch"?new URLSearchParams(location.search).get("v"):
-  path.startsWith("/shorts/")?path.split("/")[2]:null;
- if(!id||!/^[A-Za-z0-9_-]{11}$/.test(id)||markedOnPage.has(id))return;
- const duration=Number.isFinite(video.duration)?video.duration:120;
- const threshold=Math.min(30,Math.max(5,duration*0.25));
- if(video.currentTime<threshold)return;
- markedOnPage.add(id);
- void chrome.runtime.sendMessage({type:"VIDEO_WATCHED_SET",videoId:id,watched:true}).catch(()=>{
-  markedOnPage.delete(id);
- });
-},true);
+/** Local watch position. Only normal YouTube playback in visible tabs is measured. */
+const lastProgress=new Map<string,number>();
+const videoIdOnPage=():string|null=>{
+ const id=location.pathname==="/watch"?new URLSearchParams(location.search).get("v"):
+  location.pathname.startsWith("/shorts/")?location.pathname.split("/")[2]??null:null;
+ return id&&/^[A-Za-z0-9_-]{11}$/.test(id)?id:null;
+};
+function savePlayback(target:EventTarget|null,force=false):void{
+ if(!(target instanceof HTMLVideoElement)||!target.matches("video.html5-main-video"))return;
+ if(document.querySelector(".html5-video-player.ad-showing"))return;
+ const id=videoIdOnPage();
+ if(!id||!Number.isFinite(target.duration)||target.duration<=0||
+    !Number.isFinite(target.currentTime)||target.currentTime<0)return;
+ if(!force&&(document.visibilityState!=="visible"||target.paused||target.seeking))return;
+ const second=target.currentTime,last=lastProgress.get(id)??-20;
+ if(!force&&second-last<12)return;
+ lastProgress.set(id,second);
+ void chrome.runtime.sendMessage({
+  type:"WATCH_PROGRESS_SET",videoId:id,position:second,duration:target.duration
+ }).catch(()=>{lastProgress.delete(id);});
+}
+document.addEventListener("timeupdate",event=>savePlayback(event.target),true);
+document.addEventListener("pause",event=>savePlayback(event.target,true),true);
+document.addEventListener("ended",event=>savePlayback(event.target,true),true);

@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.4.0 — Akıllı Akış: gelen kutusu, yeni video sayaçları, kayıtlı filtreler, kanal sessize alma ve kontrollü yenileme**
+**v0.5.0 — İzleme kuyruğu, yerel oynatma ilerlemesi, kaldığın yerden devam etme, kısayollar ve odak modu**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -109,3 +109,14 @@ YouTube arayüzünde sağlanan bağlantılar gruba özel TubeShelf video akış�
 - **İsteğe bağlı saatlik kontrol:** Tarayıcı açıkken Chrome alarm sistemiyle otomatik bir parti yenilenir. Devamlı çalışan haricî sunucu yoktur. Sessize alınan kanallar ağ taramasından çıkarılır.
 
 **Teknik sınırlar:** Resmî olmayan YouTube kategori Atom yayınları ve genel Atom feed'i her zaman erişilebilir değildir; YouTube değişikliklerinde video kapsamı ve türü eksik kalabilir. İlk kullanım zaman damgasından önce yayımlanmış videolar gelen kutusunda yeni sayılmaz. Kalıcı izleme/okunma/sessiz kanal verileri tarayıcıdaki IndexedDB'dedir; mevcut JSON grup yedeği bu yeni ayarları kapsamaz. Bunların kapsamlı yedeklenmesi sonraki geliştirme konusu.
+
+## İzleme deneyimi (v0.5.0)
+
+- **Kuyruğa ekle:** Gelen kutusunda ve video akışında videonun kartından kuyruğa ekleyin. Aynı video iki kez eklenmez.
+- **Kuyruk:** Soldaki **İzleme kuyruğu** sayfasından 300 videoya kadar saklayın; sürükle-bırak veya ↑/↓ düğmeleriyle sıralayın. Videolar grubundan kaldırılsa bile kuyruk öğesi kalır.
+- **İzlemeye devam et:** YouTube'da normal videoları izlerken HTML5 ana oynatıcının süresi ve konumu yerel IndexedDB'ye kaydedilir (yaklaşık her 12 saniye, duraklatma/bitişte ayrıca). Kuyruktaki **YouTube'da kaldığın yerden aç** düğmesi kayıtlı saniyeyi adres parametresine ekler.
+- **Tamamlandı:** Yerel ilerleme %90'a veya video sonuna yaklaştığında tamamlanmış olarak saklanır; bu, YouTube hesap izleme geçmişinin tamamını kapsamaz. Elle tamamlandı seçeneği gerçek süre bilinmese de tamamlama işareti koyar.
+- **Klavye:** Kuyruk sayfasında J/K önceki/sonraki öğeyi seçer, Enter yerel oynatıcı açar, M tamamlandı işaretler, F odak moduna girer/çıkar, Esc oynatıcıyı kapatır. Form alanlarında kısayollar devre dışıdır.
+- **Odak modu:** Kuyruk sayfasında TubeShelf kenar menüsü ve çoklu liste görünümünü kapatarak yalnızca sıradaki öğeye odaklanır; F ile geri dönülür.
+- **Gömülü oynatıcı sınırı:** YouTube'un iframe oynatıcısının gerçek ilerleme verisi eklentiye otomatik gelmez. Bu nedenle gömülü oynatıcıda ilerleme kaydı varmış gibi davranılmaz; kullanıcı tamamlandı işareti koyabilir veya YouTube'da açıp ilerlemeyi kaydedebilir. Bazı videolar iframe içinde oynatılamayabilir.
+- **Veri koruma:** Veritabanı şeması v3→v4 yükselir ve mevcut grup, video önbelleği, izlenme/okunma, sessiz kanal bilgilerini silmez. Kuyruk/ilerleme yereldir; mevcut yalnızca grup verisi içeren JSON yedeğine henüz eklenmemiştir.

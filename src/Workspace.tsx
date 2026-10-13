@@ -5,8 +5,9 @@ import {channelsInGroup} from "./groups";
 import type {useCatalog} from "./useCatalog";
 import type {DirectImportStatus} from "./types";
 import {SmartWorkspace} from "./SmartWorkspace";
+import {QueueWorkspace} from "./QueueWorkspace";
 interface Props {state:ReturnType<typeof useCatalog>;current:string|null;choose:(id:string|null)=>void;
- view:"inbox"|"feed"|"board"|"manage";navigate:(view:"inbox"|"feed"|"board"|"manage",groupId:string|null)=>void}
+ view:"inbox"|"feed"|"board"|"manage"|"queue";navigate:(view:"inbox"|"feed"|"board"|"manage"|"queue",groupId:string|null)=>void}
 export function Workspace({state:s,current,choose,view,navigate}:Props){
  const c=s.catalog!;
  const autoConfigured=Boolean(chrome.runtime.getManifest().oauth2?.client_id);
@@ -59,6 +60,7 @@ export function Workspace({state:s,current,choose,view,navigate}:Props){
   <nav className="view-switcher" aria-label="TubeShelf bölümleri">
    <button className={view==="inbox"?"active":""} onClick={()=>navigate("inbox",null)}>◉ Gelen kutusu</button>
    <button className={view==="feed"?"active":""} onClick={()=>navigate("feed",current)}>▶ Video akışı</button>
+   <button className={view==="queue"?"active":""} onClick={()=>navigate("queue",null)}>☷ İzleme kuyruğu</button>
    <button className={view==="board"?"active":""} onClick={()=>navigate("board",null)}>▦ Video panosu</button>
    <button className={view==="manage"?"active":""} onClick={()=>navigate("manage",current)}>☷ Kanal yönetimi</button>
   </nav>
@@ -80,7 +82,7 @@ export function Workspace({state:s,current,choose,view,navigate}:Props){
    }}
    onMore={()=>setLimit(x=>x+200)} canMore={limit<filtered.length}
   />
-  </>:<SmartWorkspace catalog={c} groupId={view==="feed"?current:null} mode={view==="feed"?"feed":view==="board"?"board":"inbox"}
+  </>:view==="queue"?<QueueWorkspace/>:<SmartWorkspace catalog={c} groupId={view==="feed"?current:null} mode={view==="feed"?"feed":view==="board"?"board":"inbox"}
    onOpenGroup={id=>navigate("feed",id)}/>}
  </main>;
 }

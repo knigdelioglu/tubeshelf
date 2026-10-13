@@ -1,18 +1,20 @@
 import {useEffect,useMemo,useState} from "react";
 import type {Catalog,Group} from "./types";
 import {groupChannelCounts} from "./groups";
+import {useWatchState} from "./useWatchState";
 import type {SmartFeed} from "./smart-types";
 interface Props {
- catalog:Catalog; active:string|null;view:"inbox"|"feed"|"board"|"manage"; onSelect:(id:string|null)=>void;
- onInbox:()=>void;onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
+ catalog:Catalog; active:string|null;view:"inbox"|"feed"|"board"|"manage"|"queue"; onSelect:(id:string|null)=>void;
+ onInbox:()=>void;onQueue:()=>void;onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
  onCreate:(name:string,parentId:string|null)=>void;
  onRename:(id:string,name:string)=>void; onDelete:(id:string)=>void;
  onDropChannel:(groupId:string,channelId:string)=>void;
  onMoveGroup:(id:string,parentId:string|null)=>void;
 }
-export function Sidebar({catalog,active,view,onSelect,onInbox,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
+export function Sidebar({catalog,active,view,onSelect,onInbox,onQueue,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
  const [name,setName]=useState(""),[asRoot,setAsRoot]=useState(false);
  const counts=useMemo(()=>groupChannelCounts(catalog),[catalog]);
+ const {state:watchState}=useWatchState();
  const [cachedFeed,setCachedFeed]=useState<SmartFeed|null>(null);
  useEffect(()=>{
   let active=true;
@@ -87,6 +89,7 @@ export function Sidebar({catalog,active,view,onSelect,onInbox,onBoard,onFeed,onM
   <button className={"all-button "+(view==="inbox"?"active":"")} onClick={onInbox}>
    ◉ <span>Yeni videolar</span>{Boolean(cachedFeed?.unreadCount)&&<span className="unread-pill">{cachedFeed?.unreadCount}</span>}
   </button>
+  <button className={"all-button "+(view==="queue"?"active":"")} onClick={onQueue}>▶ <span>İzleme kuyruğu</span><small>{watchState.queue.length}</small></button>
   <button className={"all-button "+(view==="board"?"active":"")} onClick={onBoard}>▦ <span>Video panosu</span></button>
   <button className={"all-button "+(view==="feed"&&active===null?"active":"")} onClick={onFeed}>▶ <span>Tüm video akışı</span></button>
   <button className={"all-button "+(view==="manage"&&active===null?"active":"")} onClick={onManage}>◫ <span>Kanal yönetimi</span><small>{catalog.channels.length}</small></button>

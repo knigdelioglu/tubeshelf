@@ -4,11 +4,12 @@ import {formatVideoDate} from "./feed-domain";
 const kinds:Record<VideoKind,string>={video:"Video",short:"Shorts",live:"Canlı/kayıt",unknown:"Türü belirsiz"};
 interface Props {
  video:SmartVideo;onPlay:(video:SmartVideo)=>void;
+ queued:boolean;onQueue:(video:SmartVideo)=>void;
  onRead:(id:string,read:boolean)=>void;
  onWatched:(id:string,watched:boolean)=>void;
  onMute:(id:string)=>void;
 }
-export function SmartVideoCard({video,onPlay,onRead,onWatched,onMute}:Props){
+export function SmartVideoCard({video,onPlay,onRead,onWatched,onMute,onQueue,queued}:Props){
  return <article className={"video-card smart-video-card "+(video.watched?"video-watched":"")}>
   <button className="video-cover" onClick={()=>onPlay(video)} aria-label={video.title+" oynat"}>
    <img src={video.thumbnail} alt="" loading="lazy"/>
@@ -25,6 +26,9 @@ export function SmartVideoCard({video,onPlay,onRead,onWatched,onMute}:Props){
     </button>
     <button aria-pressed={video.watched} onClick={()=>onWatched(video.id,!video.watched)}>
      {video.watched?"✓ İzlendi":"İzledim"}
+    </button>
+    <button disabled={queued} title={queued?"Kuyrukta":"İzleme kuyruğuna ekle"} onClick={()=>onQueue(video)}>
+     {queued?"✓ Kuyrukta":"+ Kuyruğa ekle"}
     </button>
     <button title={video.channelTitle+" kanalını sessize al"} onClick={()=>onMute(video.channelId)}>
      <span aria-hidden="true">◌</span> Sessize al

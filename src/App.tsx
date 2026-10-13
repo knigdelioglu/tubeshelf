@@ -6,12 +6,12 @@ export function App(){
  const s=useCatalog();
  const initial=new URLSearchParams(location.hash.slice(1));
  const [active,setActive]=useState<string|null>(initial.get("group"));
- const [view,setView]=useState<"inbox"|"feed"|"board"|"manage">(
-  ["inbox","feed","board","manage"].includes(initial.get("view")??"")?initial.get("view") as "inbox"|"feed"|"board"|"manage":"inbox"
+ const [view,setView]=useState<"inbox"|"feed"|"board"|"manage"|"queue">(
+  ["inbox","feed","board","manage","queue"].includes(initial.get("view")??"")?initial.get("view") as "inbox"|"feed"|"board"|"manage"|"queue":"inbox"
  );
  const c=s.catalog;
  const current=c?.groups.some(g=>g.id===active)?active:null;
- function navigate(nextView:"inbox"|"feed"|"board"|"manage",groupId:string|null=active){
+ function navigate(nextView:"inbox"|"feed"|"board"|"manage"|"queue",groupId:string|null=active){
   setActive(groupId);setView(nextView);s.setSelected(new Set());
   const params=new URLSearchParams({view:nextView});
   if(groupId)params.set("group",groupId);
@@ -21,7 +21,7 @@ export function App(){
  if(!c)return <main className="loading"><strong>TubeShelf</strong><p>{s.notice||"Kütüphane yükleniyor…"}</p></main>;
  return <div className="app-shell">
   <Sidebar catalog={c} active={current} view={view}
-   onSelect={choose} onInbox={()=>navigate("inbox",null)} onBoard={()=>navigate("board",null)}
+   onSelect={choose} onInbox={()=>navigate("inbox",null)} onQueue={()=>navigate("queue",null)} onBoard={()=>navigate("board",null)}
    onFeed={()=>navigate("feed",null)} onManage={()=>navigate("manage",null)}
    onCreate={(name,parentId)=>{
     const existing=new Set(c.groups.map(g=>g.id));
