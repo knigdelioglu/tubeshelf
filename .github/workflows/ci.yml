@@ -19,9 +19,16 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Typecheck, tests and build
         run: npm run verify
-      - name: Browser acceptance test (real Chromium extension)
+      - name: Install Chrome for Testing
+        id: chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: stable
+      - name: Browser acceptance test (Chrome for Testing, MV3)
         run: npm run test:browser
         timeout-minutes: 4
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
       - name: Upload UAT screenshot if failed
         if: failure()
         uses: actions/upload-artifact@v4
