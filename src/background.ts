@@ -141,7 +141,7 @@ chrome.alarms.onAlarm.addListener(alarm=>{
 });
 void configureSmartRefresh().catch(()=>undefined);
 
-chrome.notifications.onClicked.addListener(id=>{
+chrome.notifications?.onClicked?.addListener(id=>{
  if(!id.startsWith("tubeshelf-group:"))return;
  const groupId=id.slice("tubeshelf-group:".length).split(":")[0];
  if(!groupId)return;

@@ -24,7 +24,7 @@ export function orderedGroups(catalog:Catalog,prefs:CenterPreferences):string[]{
 const STOP=new Set(["kanal","youtube","resmi","official","the","video","videolar","ve","bir","ile","for","and","tv","tr"]);
 function words(raw:string):Set<string>{
  return new Set(raw.toLocaleLowerCase("tr").normalize("NFKC").split(/[^\p{L}\p{N}]+/u)
-  .map(s=>s.trim()).filter(s=>s.length>=3&&!STOP.has(s)));
+  .map(s=>s.trim()).filter(s=>(s.length>=3||s==="ai")&&!STOP.has(s)));
 }
 const THEMES:Record<string,string[]>={
  "teknoloji":["teknoloji","tech","bilgisayar","software","programlama","yazılım","coding","donanım","apple","android","linux"],
