@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.6.0 — Kişisel YouTube Merkezi: özelleştirilebilir pano, grup önerileri, kanal etkinliği ve isteğe bağlı grup bildirimleri**
+**v0.7.0 — Tam kişisel yedekleme, önizlemeli güvenli geri yükleme ve eski yedeklerle uyumluluk**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -135,3 +135,21 @@ TubeShelf artık **Benim Merkezim** sayfasıyla açılır. Eski Video panosu, Ak
 ### Doğrulama
 
 `npm ci && npm run verify` komutu TypeScript denetimi, Vitest testleri ve Manifest V3 üretim derlemesini çalıştırır. Yeni arayüzde gerçek Chrome/YouTube UAT testi ayrı gerekir.
+
+## Tam kişisel yedekleme ve geri yükleme (v0.7.0)
+
+**Benim Merkezim → Tam yedek indir** veya **Kanal yönetimi → Tam yedek indir** üzerinden sürüm 2 JSON dosyası oluşturabilirsiniz. Bu dosya şunları içerir:
+
+- Kanallar, grup/alt grup düzeni ve üyelikler.
+- İzleme kuyruğu ve sıralaması, oynatma ilerlemeleri, izlenmiş ve okunmuş video kimlikleri.
+- Sessize alınmış kanallar ve gelen kutusunun ilk kullanım zamanı.
+- Kişisel merkez düzeni, sabitlenen gruplar ve grup bazlı akış filtreleri.
+- Bildirim grubu tercihleri ve daha önce bildirilen video kimlikleri (**bildirimler geri yüklemede kapalı tutulur**).
+
+**Dahil edilmeyenler:** Google OAuth belirteçleri/izinler, Chrome bildirim izni, RSS video önbelleği ve geçici ağ hatası kayıtları. Video önbelleği kayıttan sonra yeniden oluşturulur. Otomatik eşitleme ve periyodik tarama için mevcut bilgisayarın ayrı ayarları geçerlidir.
+
+**Geri yükleme:** JSON seçilince boyut sınırı (20 MB), biçim, kimlikler, grup döngüleri, sıra ve ilerleme alanları yazmadan önce doğrulanır. Ekran kanallar, gruplar, kuyruğa alınmış videolar ve kişisel kayıtların sayılarını gösterir. Son onay verilmeden veriler değiştirilmez. Veritabanındaki değişiklikler tek IndexedDB işleminde atomik olarak yapılır. Chrome depolama ayarları farklı bir mekanizma olduğundan tam çapraz-depolama atomikliği garanti edilemez; hata durumunda önceki ayarlara geri dönülmeye çalışılır.
+
+**Eski grup yedekleri:** Önceki sürümlerde indirilen, yalnızca kanal/grup içeren JSON dosyaları da desteklenir. Bunlar *yalnızca* kanal ve grupları değiştirir; kuyruk, izleme geçmişi, okunma ve diğer kişisel ayarları silmez.
+
+**Önemli:** Dosyada kişisel kanal ve izleme tercihleriniz bulunur; paylaşmadan önce inceleyin. Eklentiyi kaldırmadan önce yedek almak en güvenli yöntemdir.

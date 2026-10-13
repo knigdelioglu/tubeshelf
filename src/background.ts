@@ -1,3 +1,5 @@
+import {personalBackupAction} from "./personal-backup-service";
+import type {PersonalBackupRequest} from "./personal-backup-service";
 import {centerAction,checkGroupNotifications} from "./center-service";
 import type {CenterRequest} from "./center-types";
 import {watchAction} from "./watch-service";
@@ -22,6 +24,15 @@ async function directSession(sender:chrome.runtime.MessageSender,token?:string){
 }
 chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:unknown)=>void)=>{
  if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED"||raw.type==="SMART_UPDATED"||raw.type==="WATCH_UPDATED")return false;
+ if(raw.type==="FULL_BACKUP_CREATE"||raw.type==="FULL_BACKUP_PREVIEW"||raw.type==="FULL_BACKUP_RESTORE"){
+  if(!sender.url?.startsWith(chrome.runtime.getURL(""))){
+   sendResponse({ok:false,error:"Yedek işlemleri yalnızca TubeShelf yönetim ekranından yapılabilir."});
+   return false;
+  }
+  void personalBackupAction(raw as PersonalBackupRequest).then(sendResponse).catch(err=>
+   sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
+  return true;
+ }
  if(raw.type==="CENTER_ANALYTICS_GET"||raw.type==="CENTER_NOTIFICATION_GET"||
     raw.type==="CENTER_NOTIFICATION_CONFIGURE"){
   void centerAction(raw as CenterRequest).then(sendResponse).catch(err=>

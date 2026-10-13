@@ -6,7 +6,7 @@ import {validateBackup} from "./backup";
 import {fetchSubscriptions} from "./youtube";
 
 let queue:Promise<unknown>=Promise.resolve();
-function serialized<T>(job:()=>Promise<T>):Promise<T>{
+export function withCatalogLock<T>(job:()=>Promise<T>):Promise<T>{
  const next=queue.then(job);
  queue=next.then(()=>undefined,()=>undefined);
  return next;
@@ -21,7 +21,7 @@ function notify(c:Catalog):void {
  ).catch(()=>undefined);
 }
 async function mutate(update:(c:Catalog)=>Catalog|Promise<Catalog>):Promise<Catalog>{
- return serialized(async()=>{
+ return withCatalogLock(async()=>{
   const current=await readCatalog();
   const next=await update(current);
   await writeCatalog(next);
@@ -31,7 +31,7 @@ async function mutate(update:(c:Catalog)=>Catalog|Promise<Catalog>):Promise<Cata
 }
 export async function handle(message:Request):Promise<Catalog>{
  switch(message.type){
-  case "CATALOG_GET":return serialized(readCatalog);
+  case "CATALOG_GET":return withCatalogLock(readCatalog);
   case "DIRECT_IMPORT_START":{
    const prior=(await chrome.storage.local.get("directImportStatus")).directImportStatus;
    if(prior&&["opening","scanning"].includes(prior.state)&&Date.now()-prior.startedAt<160000){

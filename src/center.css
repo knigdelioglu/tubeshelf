@@ -54,3 +54,11 @@
  .center-suggestion button{background:#3f2d2d;border-color:#735252;color:#ffc1c1}
  .center-options button.center-selected{background:#493239;color:#ffcaca}
 }
+
+/* Complete personal-backup controls */
+.center-backup{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;background:#fff;border:1px solid #e0e4eb;border-radius:13px;padding:17px;margin:0 0 15px}
+.center-backup strong{font-size:14px}.center-backup p{max-width:560px;font-size:12px;color:#8a93a0;line-height:1.5;margin:6px 0 0}
+.center-backup-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.center-backup-actions>button,.center-backup-actions .file-button{border:1px solid #dfe2e8;background:#f6f7f9;border-radius:9px;color:inherit;padding:10px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.center-backup-actions>button{background:#df3e3e;color:#fff;border-color:#df3e3e}
+@media(prefers-color-scheme:dark){.center-backup{background:#24272d;border-color:#3b424b}.center-backup p{color:#a9b2c0}.center-backup-actions .file-button{background:#30343d;border-color:#4a5260;color:#e2e5ec}}

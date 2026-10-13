@@ -18,8 +18,8 @@ export function Toolbar(p:Props){
      onClick={p.directImport}>↻ YouTube'dan kanalları getir</button>
    <label className="file-button">CSV içe aktar<input type="file" accept=".csv,text/csv" disabled={p.busy} onChange={e=>{const f=e.target.files?.[0];if(f)p.importCsv(f);e.target.value="";}}/></label>
    {p.autoConfigured&&<button disabled={p.busy} onClick={p.sync}>{p.busy?"İşleniyor…":"Google API ile eşitle"}</button>}
-   <button disabled={p.busy} onClick={p.backup}>Yedek indir</button>
-   <label className="file-button">Yedek yükle<input type="file" accept=".json,application/json" disabled={p.busy} onChange={e=>{const f=e.target.files?.[0];if(f)p.restore(f);e.target.value="";}}/></label>
+   <button disabled={p.busy} onClick={p.backup}>Tam yedek indir</button>
+   <label className="file-button">Yedek geri yükle<input type="file" accept=".json,application/json" disabled={p.busy} onChange={e=>{const f=e.target.files?.[0];if(f)p.restore(f);e.target.value="";}}/></label>
   </div>
   {p.autoConfigured&&<div className="sync-settings">
    <label className="small-check">

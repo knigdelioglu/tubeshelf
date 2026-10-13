@@ -14,6 +14,7 @@ interface Props {
  onOpenGroup:(id:string)=>void;
  onQueue:()=>void;
  onInbox:()=>void;
+ backup:()=>void;restore:(file:File)=>void;backupBusy:boolean;backupNotice:string;backupError:boolean;
 }
 const SETTINGS_KEY="centerPreferencesV1";
 async function centerRequest(request:unknown):Promise<CenterResponse>{
@@ -28,7 +29,7 @@ function GroupVideo({video}: {video:SmartVideo}){
   {video.unread&&<i className="center-new">Yeni</i>}
  </a>;
 }
-export function CenterWorkspace({catalog,onOpenGroup,onQueue,onInbox}:Props){
+export function CenterWorkspace({catalog,onOpenGroup,onQueue,onInbox,backup,restore,backupBusy,backupNotice,backupError}:Props){
  const {feed,error:feedError,busy:feedBusy,refresh}=useSmartFeed(null,catalog.revision);
  const {state:watchState}=useWatchState();
  const [prefs,setPrefs]=useState<CenterPreferences>({...DEFAULT_CENTER});
@@ -149,6 +150,15 @@ export function CenterWorkspace({catalog,onOpenGroup,onQueue,onInbox}:Props){
    <div><strong>{catalog.groups.length}</strong><span>Gruplar</span></div>
    <div><strong>{analytics?.sampledChannels??"—"} / {analytics?.channels.length??catalog.channels.length}</strong><span>Kaynağı taranan kanallar</span></div>
   </div>
+  <section className="center-backup">
+   <div><strong>Verilerini güvenceye al</strong><p>Grupların, kuyruk, izleme/okunma geçmişin, sessiz kanallar ve kişisel ayarların tek dosyada.</p></div>
+   <div className="center-backup-actions">
+    <button disabled={backupBusy} onClick={backup}>↓ Tam yedek indir</button>
+    <label className="file-button">↑ Yedeği geri yükle<input type="file" accept=".json,application/json"
+     disabled={backupBusy} onChange={e=>{const file=e.target.files?.[0];if(file)restore(file);e.target.value="";}}/></label>
+   </div>
+  </section>
+  {backupNotice&&<div className={"notice "+(backupError?"error":"")} role={backupError?"alert":"status"}>{backupNotice}</div>}
   {(message||feedError)&&<div className={feedError?"notice error":"notice"} role="status">{message||feedError}</div>}
   <details className="center-settings">
    <summary><strong><span aria-hidden="true">⚙</span> Panoyu özelleştir</strong></summary>

@@ -85,7 +85,9 @@ export function Workspace({state:s,current,choose,view,navigate}:Props){
    onMore={()=>setLimit(x=>x+200)} canMore={limit<filtered.length}
   />
   </>:view==="queue"?<QueueWorkspace/>:view==="home"?
-   <CenterWorkspace catalog={c} onOpenGroup={id=>navigate("feed",id)} onQueue={()=>navigate("queue",null)} onInbox={()=>navigate("inbox",null)}/>:<SmartWorkspace catalog={c} groupId={view==="feed"?current:null} mode={view==="feed"?"feed":view==="board"?"board":"inbox"}
+   <CenterWorkspace catalog={c} backup={()=>{void s.backup();}}
+    restore={file=>{void s.restore(file);}} backupBusy={s.busy} backupNotice={s.notice} backupError={s.error}
+    onOpenGroup={id=>navigate("feed",id)} onQueue={()=>navigate("queue",null)} onInbox={()=>navigate("inbox",null)}/>:<SmartWorkspace catalog={c} groupId={view==="feed"?current:null} mode={view==="feed"?"feed":view==="board"?"board":"inbox"}
    onOpenGroup={id=>navigate("feed",id)}/>}
  </main>;
 }
