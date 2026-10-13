@@ -9,7 +9,7 @@ TubeShelf, abonelikleri yerel gruplara ayırır. Kanallarınızı YouTube üzeri
 Node.js 22+ gerekir.
 
 ```bash
-npm install
+npm ci
 npm run verify
 ```
 

@@ -14,11 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
       - name: Install
-        run: npm install --no-audit --no-fund
-      - name: Export lockfile for initial dependency pinning
-        run: |
-          node -e 'const fs=require("fs");const content=fs.readFileSync("package-lock.json","utf8");for(let i=0;i<content.length;i+=1500){console.log("LOCKCHUNK:"+i+":"+JSON.stringify(content.slice(i,i+1500)))}'
+        run: npm ci --no-audit --no-fund
       - name: Typecheck, tests and build
         run: npm run verify
       - name: Upload Chrome extension
