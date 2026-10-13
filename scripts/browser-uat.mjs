@@ -92,22 +92,30 @@ async function start(){
   socket.addEventListener("error",reject,{once:true});
  });
  cdp=new CDP(socket);
+ const seenWorkers=new Set();
  const extension=await until(async()=>{
   const targets=await cdp.send("Target.getTargets");
-  const worker=targets.targetInfos?.find(t=>t.url?.startsWith("chrome-extension://")&&t.url.includes("background.js"));
-  const id=worker?.url.split("/")[2];
-  return typeof id==="string"&&/^[a-z]{32}$/.test(id)&&worker?.targetId?{id,workerTargetId:worker.targetId}:null;
- },"MV3 background worker");
- // An extension dashboard must be opened by the extension itself.
- // Browser CDP Target.createTarget may deny extension-page navigation.
- const workerSession=(await cdp.send("Target.attachToTarget",{
-  targetId:extension.workerTargetId,flatten:true
- })).sessionId;
- await cdp.send("Runtime.enable",{},workerSession);
- const manifestCheck=await cdp.send("Runtime.evaluate",{
-  expression:"chrome.runtime.getManifest().name",returnByValue:true
- },workerSession);
- assert.ok(String(manifestCheck.result?.value??"").includes("TubeShelf"),"Unexpected extension worker");
+  const workers=targets.targetInfos?.filter(t=>t.url?.startsWith("chrome-extension://")&&t.url.includes("background.js"))??[];
+  for(const worker of workers){
+   const id=worker.url.split("/")[2];
+   if(!/^[a-z]{32}$/.test(id??""))continue;
+   try{
+    const attached=await cdp.send("Target.attachToTarget",{targetId:worker.targetId,flatten:true});
+    const workerSession=attached.sessionId;
+    await cdp.send("Runtime.enable",{},workerSession);
+    const result=await cdp.send("Runtime.evaluate",{
+     expression:"chrome.runtime.getManifest().name",returnByValue:true
+    },workerSession);
+    const name=String(result.result?.value??"");
+    if(name.includes("TubeShelf"))return {id,workerSession};
+    if(!seenWorkers.has(id)){console.log("Ignoring unrelated extension worker:",id,name);seenWorkers.add(id);}
+   }catch(err){
+    if(!seenWorkers.has(id)){console.log("Worker inspection failed:",id,String(err));seenWorkers.add(id);}
+   }
+  }
+  return null;
+ },"TubeShelf MV3 background worker");
+ const workerSession=extension.workerSession;
  const opened=await cdp.send("Runtime.evaluate",{
   expression:"chrome.tabs.create({url:chrome.runtime.getURL('index.html')}).then(t=>t.id)",
   awaitPromise:true,returnByValue:true
