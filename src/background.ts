@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:
     raw.type==="WATCH_PROGRESS_SET"||raw.type==="WATCH_PROGRESS_RESET"||raw.type==="WATCH_COMPLETE"){
   void watchAction(raw as WatchRequest).then(response=>{
    if((raw.type==="WATCH_PROGRESS_SET"||raw.type==="WATCH_COMPLETE")&&response.ok&&
-      response.state.progress.some((p:{videoId:string;completed:boolean})=>p.videoId===raw.videoId&&p.completed))announceSmartChange();
+      response.state.progress.some((p:{videoId:string;completed:boolean})=>p.videoId===(raw as {videoId?:string}).videoId&&p.completed))announceSmartChange();
    sendResponse(response);
   }).catch(err=>sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
   return true;
