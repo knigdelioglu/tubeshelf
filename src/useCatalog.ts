@@ -6,11 +6,22 @@ export function useCatalog(){
  const [catalog,setCatalog]=useState<Catalog|null>(null);
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState(false);
  const [selected,setSelected]=useState<Set<string>>(new Set());
- useEffect(()=>{void send({type:"CATALOG_GET"}).then(setCatalog).catch(e=>{setNotice(String(e));setError(true);});},[]);
+ useEffect(()=>{
+  let live=true;
+  const newer=(incoming:Catalog)=>{if(live)setCatalog(current=>!current||incoming.revision>=current.revision?incoming:current);};
+  void send({type:"CATALOG_GET"}).then(newer).catch(e=>{if(live){setNotice(String(e));setError(true);}});
+  const refresh=(message:unknown)=>{
+   if(message&&typeof message==="object"&&"type" in message&&message.type==="CATALOG_CHANGED")
+    void send({type:"CATALOG_GET"}).then(newer).catch(()=>undefined);
+   return false;
+  };
+  chrome.runtime.onMessage.addListener(refresh);
+  return ()=>{live=false;chrome.runtime.onMessage.removeListener(refresh);};
+ },[]);
  async function run(request:Request,success="Değişiklikler kaydedildi."):Promise<Catalog|undefined>{
   setBusy(true);setError(false);setNotice("");
   try{
-   const next=await send(request);setCatalog(next);setSelected(new Set());setNotice(success);return next;
+   const next=await send(request);setCatalog(current=>!current||next.revision>=current.revision?next:current);setSelected(new Set());setNotice(success);return next;
   }catch(e){setError(true);setNotice(e instanceof Error?e.message:String(e));return undefined;}
   finally{setBusy(false);}
  }

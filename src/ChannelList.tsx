@@ -1,4 +1,4 @@
-import {useEffect,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import type {Catalog,Channel} from "./types";
 interface Props {
  catalog:Catalog; channels:Channel[]; total:number; active:string|null;
@@ -10,7 +10,14 @@ export function ChannelList({catalog,channels,total,active,selected,busy,onToggl
  const [destination,setDestination]=useState(active??"");
  useEffect(()=>setDestination(active??""),[active]);
  const target=destination||catalog.groups[0]?.id||"";
- const direct=new Set(catalog.memberships.filter(m=>m.groupId===active).map(m=>m.channelId));
+ const {direct,membershipCounts}=useMemo(()=>{
+  const direct=new Set<string>(),membershipCounts=new Map<string,number>();
+  for(const m of catalog.memberships){
+   if(m.groupId===active)direct.add(m.channelId);
+   membershipCounts.set(m.channelId,(membershipCounts.get(m.channelId)??0)+1);
+  }
+  return {direct,membershipCounts};
+ },[catalog.memberships,active]);
  return <section className="channel-panel">
   <div className="list-head"><div><h2>Kanallar</h2><p>{total} sonuç · {selected.size} seçili</p></div>
    <label className="select-all"><input type="checkbox" checked={channels.length>0&&channels.every(c=>selected.has(c.id))} onChange={onToggleAll}/> Görünenleri seç</label>
@@ -30,7 +37,7 @@ export function ChannelList({catalog,channels,total,active,selected,busy,onToggl
     <input type="checkbox" aria-label={channel.title+" seç"} checked={selected.has(channel.id)} onChange={()=>onToggle(channel.id)}/>
     {channel.thumbnailUrl?<img className="avatar" src={channel.thumbnailUrl} alt=""/>:<span className="avatar avatar-fallback">{channel.title.charAt(0).toUpperCase()}</span>}
     <div className="channel-details"><a href={"https://www.youtube.com/channel/"+channel.id} target="_blank" rel="noopener noreferrer">{channel.title} <span aria-hidden="true">↗</span></a>
-     <small>{channel.subscribed?"Abone olundu":"Artık abone değil"} · {catalog.memberships.filter(m=>m.channelId===channel.id).length} grup{direct.has(channel.id)?" · Bu grupta":""}</small>
+     <small>{channel.subscribed?"Abone olundu":"Artık abone değil"} · {membershipCounts.get(channel.id)??0} grup{direct.has(channel.id)?" · Bu grupta":""}</small>
     </div>
     <span className="drag-hint" title="Bir gruba sürükleyin">⠿</span>
    </div>)}

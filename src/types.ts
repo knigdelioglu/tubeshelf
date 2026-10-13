@@ -9,8 +9,10 @@ export type Request =
 | {type:"GROUP_CREATE";name:string;parentId:string|null}
 | {type:"GROUP_RENAME";id:string;name:string}
 | {type:"GROUP_DELETE";id:string}
+| {type:"GROUP_MOVE";id:string;parentId:string|null}
 | {type:"MEMBERSHIP_SET";groupId:string;channelIds:string[];enabled:boolean}
 | {type:"CATALOG_RESTORE";backup:unknown}
 | {type:"SUBSCRIPTIONS_SYNC"}
+| {type:"SUBSCRIPTIONS_SYNC_AUTO"}
 | {type:"OPEN_DASHBOARD";groupId?:string};
 export type Response = {ok:true;catalog:Catalog}|{ok:false;error:string};

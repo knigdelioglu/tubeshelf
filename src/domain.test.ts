@@ -1,6 +1,6 @@
 import {describe,it,expect} from "vitest";
 import {parseCsv,parseTakeoutCsv} from "./csv";
-import {emptyCatalog,addGroup,renameGroup,deleteGroup,channelsInGroup} from "./groups";
+import {emptyCatalog,addGroup,renameGroup,deleteGroup,moveGroup,groupChannelCounts,channelsInGroup} from "./groups";
 import {importChannels,setMembership} from "./channels";
 import {validateBackup} from "./backup";
 const id1="UC"+"a".repeat(22),id2="UC"+"b".repeat(22);
@@ -46,5 +46,28 @@ describe("catalog invariants",()=>{
   const c=addGroup(emptyCatalog(),"a","A",null);
   expect(validateBackup(JSON.parse(JSON.stringify(c))).groups).toHaveLength(1);
   expect(()=>validateBackup({...c,groups:[{...c.groups[0],parentId:"a"}]})).toThrow();
+ });
+});
+
+describe("group moves and scalable counts",()=>{
+ it("moves nested groups without losing memberships",()=>{
+  let c=importChannels(emptyCatalog(),[{id:id1,title:"Bir"},{id:id2,title:"İki"}]);
+  c=addGroup(c,"a","A",null);c=addGroup(c,"b","B",null);c=addGroup(c,"child","Alt","a");
+  c=setMembership(c,"a",[id1],true);
+  c=setMembership(c,"child",[id1,id2],true);
+  expect(groupChannelCounts(c).get("a")).toBe(2);
+  c=moveGroup(c,"child","b");
+  expect(groupChannelCounts(c).get("a")).toBe(1);
+  expect(groupChannelCounts(c).get("b")).toBe(2);
+  expect(c.memberships).toHaveLength(3);
+  expect(()=>moveGroup(c,"b","child")).toThrow();
+  c=moveGroup(c,"child",null);
+  expect(c.groups.find(g=>g.id==="child")?.parentId).toBeNull();
+ });
+ it("rejects sibling name collisions when moving",()=>{
+  let c=addGroup(emptyCatalog(),"a","Kategori",null);
+  c=addGroup(c,"b","Başka",null);
+  c=addGroup(c,"sub","Kategori","b");
+  expect(()=>moveGroup(c,"sub",null)).toThrow();
  });
 });

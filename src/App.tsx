@@ -22,6 +22,7 @@ export function App(){
    }}
    onRename={(id,name)=>{void s.run({type:"GROUP_RENAME",id,name});}}
    onDelete={id=>{void s.run({type:"GROUP_DELETE",id}).then(next=>{if(next&&current===id)choose(null);});}}
+   onMoveGroup={(id,parentId)=>{void s.run({type:"GROUP_MOVE",id,parentId},"Grup taşındı.");}}
    onDropChannel={(groupId,channelId)=>{
     void s.run({type:"MEMBERSHIP_SET",groupId,channelIds:[channelId],enabled:true},"Kanal gruba eklendi.");
    }}

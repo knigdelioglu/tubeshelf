@@ -33,11 +33,13 @@ Alternatif: GitHub Actions başarılı olduğunda `tubeshelf-chrome-unpacked` ç
 4. Terminalde `YOUTUBE_OAUTH_CLIENT_ID=CLIENT_ID npm run build` komutunu çalıştırın, uzantıyı yeniden yükleyin.
 5. **YouTube senkronize et** ile Google hesabınızdan okuma izni verin.
 
+İlk manuel eşitleme başarılı olduktan sonra panelde **Otomatik eşitleme (12 saatte bir)** seçeneği açılabilir. Bu isteğe bağlıdır, tarayıcı açıkken Chrome alarms üzerinden çalışır ve arka planda yeni izin penceresi açmaz. Yetki süresi dolarsa panelde hata görüntülenir; yeniden manuel eşitleme yapın.
+
 Kimlik yapılandırılmadıysa eşitleme açık bir hata verir; CSV/grup yönetimi çalışmaya devam eder. Kimlik, giriş parolası veya erişim belirteci depoya eklenmez. Google'ın test modu ve yetkilendirme kısıtları geçerli olabilir.
 
 ## Yapabilecekleriniz
 
-- Sınırsız grup ve alt grup (yerel güvenlik sınırı: 2000).
+- Grup ve alt grup oluşturma (yerel güvenlik sınırı: 2000). Grupları sürükleyerek yeniden konumlandırma.
 - Tek kanalı birden çok gruba bağlama; toplu seçim ve gruba sürükle-bırak.
 - YouTube sol menüsünden gruplara hızlı erişim.
 - Yerel JSON yedeği ve doğrulamalı geri yükleme.
@@ -57,3 +59,11 @@ Kimlik yapılandırılmadıysa eşitleme açık bir hata verir; CSV/grup yöneti
 ## Gizlilik
 
 Veriler IndexedDB içinde, uzantı kökeninde saklanır. Otomatik senkronizasyon seçilirse YouTube Data API yalnızca abone olunan kanalları okumak için çağrılır. Sunucu, analiz hizmeti veya telemetri yoktur.
+
+## Denetim notları
+
+- Aynı veritabanını kullanan açık paneller güncelleme mesajı ile yenilenir.
+- Grup taşıma işlemi kendi altına taşıma ve kardeş isim çakışmalarını engeller.
+- Abonelik sayfaları bitmeden kayıt değiştirilmez; bozuk ve yinelenen API sayfa belirteçleri işlemeyi durdurur.
+- Otomatik senkronizasyon kullanıcı izni olmadan etkin değildir, Chrome kapalıyken garantili bir zamanlayıcı değildir.
+- Gerçek Google OAuth ve canlı YouTube navigasyonu için tarayıcı kabul testi ayrıca gerekir.

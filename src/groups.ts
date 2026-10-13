@@ -34,3 +34,33 @@ export function channelsInGroup(c:Catalog,id:string):Set<string> {
  const groups=descendants(c.groups,id);
  return new Set(c.memberships.filter(m=>groups.has(m.groupId)).map(m=>m.channelId));
 }
+
+export function moveGroup(c:Catalog,id:string,parentId:string|null):Catalog{
+ const target=c.groups.find(g=>g.id===id);
+ if(!target)throw new Error("Grup bulunamadı.");
+ if(parentId!==null&&!c.groups.some(g=>g.id===parentId))throw new Error("Yeni üst grup bulunamadı.");
+ if(parentId!==null&&descendants(c.groups,id).has(parentId))throw new Error("Grup kendi alt grubuna taşınamaz.");
+ if(target.parentId===parentId)return c;
+ nameFor(c,target.name,parentId,id);
+ return changed(c,{groups:c.groups.map(g=>g.id===id?{...g,parentId}:g)});
+}
+
+export function groupChannelCounts(c:Catalog):Map<string,number>{
+ const direct=new Map<string,Set<string>>();
+ for(const group of c.groups)direct.set(group.id,new Set());
+ for(const m of c.memberships)direct.get(m.groupId)?.add(m.channelId);
+ const children=new Map<string,string[]>();
+ for(const group of c.groups)if(group.parentId){
+  const entries=children.get(group.parentId)??[];
+  entries.push(group.id);children.set(group.parentId,entries);
+ }
+ const counts=new Map<string,number>();
+ function walk(id:string):Set<string>{
+  const channels=new Set(direct.get(id)??[]);
+  for(const child of children.get(id)??[])for(const channel of walk(child))channels.add(channel);
+  counts.set(id,channels.size);
+  return channels;
+ }
+ for(const group of c.groups)if(group.parentId===null)walk(group.id);
+ return counts;
+}
