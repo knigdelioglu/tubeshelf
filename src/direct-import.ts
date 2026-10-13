@@ -19,8 +19,10 @@ export function extractChannel(el:Element):ChannelInput|null {
  const links=el.querySelectorAll<HTMLAnchorElement>("a[href]");
  const main=el.querySelector<HTMLAnchorElement>("a#main-link,a#channel-title,a[href*='/channel/'],a[href^='/@']");
  const title=(
+  el.querySelector("ytd-channel-name yt-formatted-string,.ytd-channel-name yt-formatted-string,#channel-title yt-formatted-string,#main-link #text")?.textContent||
   main?.querySelector("#text,yt-formatted-string")?.textContent||
-  el.querySelector("#channel-title,#main-link #text,#text.ytd-channel-renderer")?.textContent||
+  el.querySelector(".ytd-channel-name,#channel-title,#text.ytd-channel-renderer")?.textContent||
+  main?.getAttribute("title")||
   main?.textContent||""
  ).replace(/\s+/g," ").trim();
  let channelRef=id&&CHANNEL_ID.test(id)?id:null;
@@ -48,6 +50,7 @@ export async function scanSubscriptions(
   for(let round=0;round<180;round++){
    if(location.pathname!=="/feed/channels")throw new Error("YouTube abonelikler sayfasından ayrıldınız.");
    const cards=document.querySelectorAll(SELECTORS);
+   if(round===24&&discovered.size===0)break;
    for(const card of cards){
     const channel=extractChannel(card);
     if(channel)discovered.set(channel.id,channel);
