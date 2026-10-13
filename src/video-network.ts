@@ -3,7 +3,7 @@ import type {ChannelVideoCache,VideoItem,VideoKind} from "./video-types";
 import {parseAtom,feedUrl,standardFeedUrl,findCanonicalChannelId,mergeFeedKinds} from "./video-rss";
 import {CHANNEL_ID} from "./channel-ref";
 
-const TIMEOUT=14000;
+const TIMEOUT=8500;
 async function loadText(url:string):Promise<string> {
  const response=await fetch(url,{credentials:"omit",signal:AbortSignal.timeout(TIMEOUT)});
  if(!response.ok)throw new Error("YouTube yayın HTTP "+response.status);

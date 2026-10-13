@@ -18,7 +18,7 @@ export function useVideoFeed(groupId:string|null,revision:number){
  const refresh=useCallback(async()=>{
   setBusy(true);setError("");
   try{
-   const result=await request({type:"VIDEO_REFRESH",groupId});
+   const result=await request({type:"VIDEO_REFRESH",groupId,force:true});
    if(result.ok&&"feed" in result)setFeed(result.feed);
   }catch(e){setError(e instanceof Error?e.message:String(e));}
   finally{setBusy(false);}

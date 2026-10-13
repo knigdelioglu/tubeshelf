@@ -6,7 +6,7 @@ import {getAllVideoCaches,getWatchedVideoIds,putVideoCache,setWatched} from "./v
 import {loadChannelVideos} from "./video-network";
 
 const REFRESH_MS=30*60*1000;
-const BATCH=80;
+const BATCH=50;
 const VIDEO_ID=/^[A-Za-z0-9_-]{11}$/;
 const feedRequests=new Map<string,Promise<FeedSnapshot>>();
 function scope(c:Catalog,groupId:string|null):Channel[]{
@@ -36,13 +36,17 @@ async function snapshot(groupId:string|null):Promise<FeedSnapshot>{
   totalChannels:channels.length,loadedChannels:loaded,failedChannels:failed,
   ...(updatedAt?{updatedAt}:{}),errors};
 }
-async function refresh(groupId:string|null):Promise<FeedSnapshot>{
+async function refresh(groupId:string|null,force=false):Promise<FeedSnapshot>{
  const [catalog,caches]=await Promise.all([readCatalog(),getAllVideoCaches()]);
  const channels=scope(catalog,groupId);
  const records=new Map(caches.map(cache=>[cache.channelId,cache]));
  const stale=channels.filter(ch=>{
   const cache=records.get(ch.id);
-  return !cache||Date.now()-Date.parse(cache.updatedAt)>REFRESH_MS;
+  return force||!cache||Date.now()-Date.parse(cache.updatedAt)>REFRESH_MS;
+ }).sort((a,b)=>{
+  const older=records.get(a.id)?.updatedAt??"";
+  const newer=records.get(b.id)?.updatedAt??"";
+  return older.localeCompare(newer);
  }).slice(0,BATCH);
  let index=0;
  const workers=Array.from({length:Math.min(5,stale.length)},async()=>{
@@ -68,7 +72,7 @@ export async function videoAction(req:VideoRequest):Promise<VideoResponse>{
     const key=req.groupId??"all";
     // Multiple dashboards requesting the same group share one pending fetch.
     if(!feedRequests.has(key)){
-     const promise=refresh(req.groupId).finally(()=>{feedRequests.delete(key);});
+     const promise=refresh(req.groupId,req.force===true).finally(()=>{feedRequests.delete(key);});
      feedRequests.set(key,promise);
     }
     return {ok:true,feed:await feedRequests.get(key)!};
