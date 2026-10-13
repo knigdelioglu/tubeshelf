@@ -32,6 +32,18 @@ async function mutate(update:(c:Catalog)=>Catalog|Promise<Catalog>):Promise<Cata
 export async function handle(message:Request):Promise<Catalog>{
  switch(message.type){
   case "CATALOG_GET":return serialized(readCatalog);
+  case "DIRECT_IMPORT_START":{
+   const prior=(await chrome.storage.local.get("directImportStatus")).directImportStatus;
+   if(prior&&["opening","scanning"].includes(prior.state)&&Date.now()-prior.startedAt<160000){
+    throw new Error("YouTube abonelik aktarımı zaten devam ediyor.");
+   }
+   const tab=await chrome.tabs.create({url:"https://www.youtube.com/feed/channels",active:true});
+   if(typeof tab.id!=="number")throw new Error("YouTube sekmesi açılamadı.");
+   await chrome.storage.local.set({directImportStatus:{
+    state:"opening",count:0,startedAt:Date.now(),tabId:tab.id,token:crypto.randomUUID()
+   }});
+   return serialized(readCatalog);
+  }
   case "OPEN_DASHBOARD":{
    await chrome.tabs.create({url:chrome.runtime.getURL("index.html")+(message.groupId?"#group="+encodeURIComponent(message.groupId):"")});
    return serialized(readCatalog);

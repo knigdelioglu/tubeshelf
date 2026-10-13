@@ -1,3 +1,4 @@
+import {channelUrl} from "./channel-ref";
 import {useEffect,useMemo,useState} from "react";
 import type {Catalog,Channel} from "./types";
 interface Props {
@@ -31,12 +32,12 @@ export function ChannelList({catalog,channels,total,active,selected,busy,onToggl
    <button className="ghost" disabled={busy||!selected.size||!target} onClick={()=>onAssign(target,false)}>Gruptan çıkar</button>
   </div>
   <div className="channel-rows">
-   {!channels.length&&<div className="empty-state"><strong>Gösterilecek kanal yok</strong><p>Abonelik içe aktarabilir veya arama filtresini değiştirebilirsiniz.</p></div>}
+   {!channels.length&&<div className="empty-state"><strong>Gösterilecek kanal yok</strong><p>YouTube\u0027dan kanalları getirin veya arama filtresini değiştirin.</p></div>}
    {channels.map(channel=><div className={"channel-row "+(selected.has(channel.id)?"selected":"")} key={channel.id}
     draggable onDragStart={e=>{e.dataTransfer.setData("application/x-tubeshelf-channel",channel.id);e.dataTransfer.effectAllowed="copy";}}>
     <input type="checkbox" aria-label={channel.title+" seç"} checked={selected.has(channel.id)} onChange={()=>onToggle(channel.id)}/>
     {channel.thumbnailUrl?<img className="avatar" src={channel.thumbnailUrl} alt=""/>:<span className="avatar avatar-fallback">{channel.title.charAt(0).toUpperCase()}</span>}
-    <div className="channel-details"><a href={"https://www.youtube.com/channel/"+channel.id} target="_blank" rel="noopener noreferrer">{channel.title} <span aria-hidden="true">↗</span></a>
+    <div className="channel-details"><a href={channelUrl(channel.id)} target="_blank" rel="noopener noreferrer">{channel.title} <span aria-hidden="true">↗</span></a>
      <small>{channel.subscribed?"Abone olundu":"Artık abone değil"} · {membershipCounts.get(channel.id)??0} grup{direct.has(channel.id)?" · Bu grupta":""}</small>
     </div>
     <span className="drag-hint" title="Bir gruba sürükleyin">⠿</span>

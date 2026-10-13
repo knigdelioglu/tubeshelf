@@ -3,26 +3,30 @@ import {Toolbar} from "./Toolbar";
 import {ChannelList} from "./ChannelList";
 import {channelsInGroup} from "./groups";
 import type {useCatalog} from "./useCatalog";
+import type {DirectImportStatus} from "./types";
 interface Props {state:ReturnType<typeof useCatalog>;current:string|null;choose:(id:string|null)=>void}
 export function Workspace({state:s,current,choose}:Props){
  const c=s.catalog!;
  const autoConfigured=Boolean(chrome.runtime.getManifest().oauth2?.client_id);
  const [autoSync,setAutoSync]=useState(false);
+ const [directStatus,setDirectStatus]=useState<DirectImportStatus|undefined>();
  const [autoAuthorized,setAutoAuthorized]=useState(false);
  const [autoSyncError,setAutoSyncError]=useState("");
  const [preferenceError,setPreferenceError]=useState("");
  const [query,setQuery]=useState(""),[showInactive,setShowInactive]=useState(false),[limit,setLimit]=useState(200);
  useEffect(()=>{
   let active=true;
-  void chrome.storage.local.get(["autoSyncEnabled","autoSyncAuthorized","lastAutoSyncError"]).then(values=>{
+  void chrome.storage.local.get(["autoSyncEnabled","autoSyncAuthorized","lastAutoSyncError","directImportStatus"]).then(values=>{
    if(!active)return;
    setAutoSync(values.autoSyncEnabled===true);
+   setDirectStatus(values.directImportStatus as DirectImportStatus|undefined);
    setAutoAuthorized(values.autoSyncAuthorized===true);
    setAutoSyncError(typeof values.lastAutoSyncError==="string"?values.lastAutoSyncError:"");
   }).catch(err=>{if(active)setPreferenceError(String(err));});
   const onStorage=(changes:{[key:string]:chrome.storage.StorageChange},area:string)=>{
    if(area!=="local")return;
    if(changes.autoSyncEnabled)setAutoSync(changes.autoSyncEnabled.newValue===true);
+   if(changes.directImportStatus)setDirectStatus(changes.directImportStatus.newValue as DirectImportStatus|undefined);
    if(changes.autoSyncAuthorized)setAutoAuthorized(changes.autoSyncAuthorized.newValue===true);
    if(changes.lastAutoSyncError)setAutoSyncError(typeof changes.lastAutoSyncError.newValue==="string"?changes.lastAutoSyncError.newValue:"");
   };
@@ -52,6 +56,7 @@ export function Workspace({state:s,current,choose}:Props){
  return <main className="main">
   <Toolbar total={c.channels.length} groups={c.groups.length} query={query} showInactive={showInactive}
    busy={s.busy} notice={preferenceError||s.notice} error={Boolean(preferenceError)||s.error} lastSync={c.lastSyncedAt}
+   directStatus={directStatus} directImport={()=>{void s.run({type:"DIRECT_IMPORT_START"},"YouTube abonelikler sayfası açılıyor.");}}
    autoSync={autoSync} autoAuthorized={autoAuthorized} autoConfigured={autoConfigured}
    canEnableAuto={autoConfigured&&autoAuthorized} autoSyncError={autoSyncError} setAutoSync={updateAuto}
    search={value=>{setQuery(value);setLimit(200);}} toggleInactive={setShowInactive}

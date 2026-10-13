@@ -1,5 +1,5 @@
 import type {Catalog} from "./types";
-import {CHANNEL_ID} from "./channels";
+import {isChannelRef} from "./channel-ref";
 import {now} from "./groups";
 export function validateBackup(raw:unknown):Catalog {
  if(!raw||typeof raw!=="object")throw new Error("Yedek biçimi geçersiz.");
@@ -7,7 +7,7 @@ export function validateBackup(raw:unknown):Catalog {
  if(x.schemaVersion!==1||!Array.isArray(x.channels)||!Array.isArray(x.groups)||!Array.isArray(x.memberships))throw new Error("Desteklenmeyen ya da bozuk yedek.");
  if(x.channels.length>25000||x.groups.length>2000||x.memberships.length>100000)throw new Error("Yedek boyut sınırını aşıyor.");
  const channels=x.channels.map(v=>{
-  if(!v||typeof v.id!=="string"||!CHANNEL_ID.test(v.id)||typeof v.title!=="string"||!v.title.trim()||v.title.length>300)throw new Error("Geçersiz kanal kaydı.");
+  if(!v||typeof v.id!=="string"||!isChannelRef(v.id)||typeof v.title!=="string"||!v.title.trim()||v.title.length>300)throw new Error("Geçersiz kanal kaydı.");
   return {id:v.id,title:v.title.trim(),subscribed:v.subscribed===true,
    ...(typeof v.thumbnailUrl==="string"&&v.thumbnailUrl.startsWith("https://")?{thumbnailUrl:v.thumbnailUrl}:{}),
    ...(typeof v.lastSeenAt==="string"?{lastSeenAt:v.lastSeenAt}:{})};

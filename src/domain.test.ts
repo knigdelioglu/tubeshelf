@@ -71,3 +71,38 @@ describe("group moves and scalable counts",()=>{
   expect(()=>moveGroup(c,"sub",null)).toThrow();
  });
 });
+
+import {channelRefFromUrl,channelUrl,isChannelRef} from "./channel-ref";
+import {extractChannel} from "./direct-import";
+describe("Direct YouTube import",()=>{
+ const handle="handle:Türkçe_123";
+ it("accepts canonical IDs and international handles",()=>{
+  expect(isChannelRef(id1)).toBe(true);
+  expect(isChannelRef(handle)).toBe(true);
+  expect(isChannelRef("https://evil.example")).toBe(false);
+  expect(channelRefFromUrl("https://www.youtube.com/@T%C3%BCrk%C3%A7e_123")).toBe(handle);
+  expect(channelRefFromUrl("/channel/"+id1)).toBe(id1);
+  expect(channelRefFromUrl("https://example.com/channel/"+id1)).toBeNull();
+  expect(channelUrl(handle)).toContain("youtube.com/@T%C3%BCrk%C3%A7e_123");
+ });
+ it("preserves handle channels in backups",()=>{
+  let c=importChannels(emptyCatalog(),[{id:handle,title:"Kanal"}]);
+  c=addGroup(c,"g","G",null);
+  c=setMembership(c,"g",[handle],true);
+  const restored=validateBackup(JSON.parse(JSON.stringify(c)));
+  expect(restored.memberships[0]?.channelId).toBe(handle);
+ });
+ it("extracts canonical channel identity from rendered YouTube cards",()=>{
+  const link={href:"https://www.youtube.com/@ornek",textContent:"Kanalım",
+    querySelector:()=>({textContent:"Kanalım"})};
+  const stub={
+   data:{channelId:id1},
+   querySelectorAll:()=>[link],
+   querySelector:(selector:string)=>selector.startsWith("a#")?link:
+    selector==="img[src]"?{src:"https://i.ytimg.com/example.jpg"}:null
+  } as unknown as Element;
+  expect(extractChannel(stub)).toEqual({
+   id:id1,title:"Kanalım",thumbnailUrl:"https://i.ytimg.com/example.jpg"
+  });
+ });
+});

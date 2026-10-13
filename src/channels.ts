@@ -1,12 +1,12 @@
 import type {Catalog,ChannelInput,Membership} from "./types";
 import {changed,now} from "./groups";
-export const CHANNEL_ID=/^UC[A-Za-z0-9_-]{22}$/;
+import {isChannelRef} from "./channel-ref";
 export function importChannels(c:Catalog,inputs:ChannelInput[],fullSync=false):Catalog {
  if(inputs.length>25000)throw new Error("Çok fazla kanal aktarıldı.");
  const map=new Map(c.channels.map(ch=>[ch.id,{...ch,subscribed:fullSync?false:ch.subscribed}]));
  const seen=new Set<string>();
  for(const input of inputs){
-  if(!CHANNEL_ID.test(input.id)||!input.title.trim()||input.title.length>300||seen.has(input.id))continue;
+  if(!isChannelRef(input.id)||!input.title.trim()||input.title.length>300||seen.has(input.id))continue;
   seen.add(input.id);
   const old=map.get(input.id);
   map.set(input.id,{...old,id:input.id,title:input.title.trim(),subscribed:true,

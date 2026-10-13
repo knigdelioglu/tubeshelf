@@ -1,3 +1,4 @@
+import {scanSubscriptions} from "./direct-import";
 import type {Catalog} from "./types";
 import {channelsInGroup} from "./groups";
 let host:HTMLElement|null=null, timer:number|undefined;
@@ -56,3 +57,16 @@ chrome.runtime.onMessage.addListener((message:unknown)=>{
  return false;
 });
 mount();
+
+let directImportStarted=false;
+async function beginDirectImport():Promise<void>{
+ if(directImportStarted||location.pathname!=="/feed/channels")return;
+ try{
+  const response=await chrome.runtime.sendMessage({type:"DIRECT_IMPORT_READY"}) as
+   {ok:boolean;session?:{token:string;tabId:number;startedAt:number}};
+  if(!response.ok||!response.session)return;
+  directImportStarted=true;
+  await scanSubscriptions(response.session);
+ }catch{/* A normal YouTube visit should never display extension errors. */}
+}
+window.setTimeout(()=>{void beginDirectImport();},900);

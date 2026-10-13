@@ -3,8 +3,10 @@ export interface ChannelInput { id:string; title:string; thumbnailUrl?:string }
 export interface Group { id:string; name:string; parentId:string|null; createdAt:string }
 export interface Membership { groupId:string; channelId:string }
 export interface Catalog { schemaVersion:1; revision:number; updatedAt:string; lastSyncedAt?:string; channels:Channel[]; groups:Group[]; memberships:Membership[] }
+export interface DirectImportStatus {state:"opening"|"scanning"|"done"|"error";count:number;startedAt:number;tabId?:number;token?:string;error?:string}
 export type Request =
 | {type:"CATALOG_GET"}
+| {type:"DIRECT_IMPORT_START"}
 | {type:"CATALOG_IMPORT";channels:ChannelInput[]}
 | {type:"GROUP_CREATE";name:string;parentId:string|null}
 | {type:"GROUP_RENAME";id:string;name:string}
