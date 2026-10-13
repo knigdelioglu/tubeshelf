@@ -95,8 +95,8 @@ async function start(){
  const extension=await until(async()=>{
   const targets=await cdp.send("Target.getTargets");
   const worker=targets.targetInfos?.find(t=>t.url?.startsWith("chrome-extension://")&&t.url.includes("background.js"));
-  const id=worker?.url.match(/^chrome-extension:\\/\\/([a-z]{32})\\//)?.[1];
-  return id&&worker?.targetId?{id,workerTargetId:worker.targetId}:null;
+  const id=worker?.url.split("/")[2];
+  return typeof id==="string"&&/^[a-z]{32}$/.test(id)&&worker?.targetId?{id,workerTargetId:worker.targetId}:null;
  },"MV3 background worker");
  // An extension dashboard must be opened by the extension itself.
  // Browser CDP Target.createTarget may deny extension-page navigation.
