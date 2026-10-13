@@ -42,13 +42,13 @@ export async function handle(message:Request):Promise<Catalog>{
    await chrome.storage.local.set({directImportStatus:{
     state:"opening",count:0,startedAt:Date.now(),tabId:tab.id,token:crypto.randomUUID()
    }});
-   return serialized(readCatalog);
+   return withCatalogLock(readCatalog);
   }
   case "OPEN_DASHBOARD":{
    const params=new URLSearchParams({view:message.view==="feed"?"feed":"board"});
    if(message.groupId)params.set("group",message.groupId);
    await chrome.tabs.create({url:chrome.runtime.getURL("index.html")+"#"+params.toString()});
-   return serialized(readCatalog);
+   return withCatalogLock(readCatalog);
   }
   case "CATALOG_IMPORT":
    if(!Array.isArray(message.channels))throw new Error("Geçersiz kanal listesi.");
