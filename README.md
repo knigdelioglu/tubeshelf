@@ -1,5 +1,7 @@
 # TubeShelf
 
+**v0.3.0 — Video akışları, Shorts/canlı filtreleri, yerel izleme durumu, grup panosu**
+
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
 TubeShelf, abonelikleri yerel gruplara ayırır. Kanallarınızı YouTube üzerinde değiştirmez; düzeninizi tarayıcı uzantısına ait IndexedDB'de saklar.
@@ -80,3 +82,19 @@ Veriler IndexedDB içinde, uzantı kökeninde saklanır. Otomatik senkronizasyon
 - Gerçek Google OAuth ve canlı YouTube navigasyonu için tarayıcı kabul testi ayrıca gerekir.
 
 **Doğrudan aktarım ve API farkı:** Doğrudan aktarım YouTube'un oturum açılmış sayfasından kullanıcı arayüzü verilerini okur. API senkronizasyonu kimlik doğrulamalı resmî yöntemi kullanır ve otomatik zamanlama yalnızca onunla çalışır. Her iki yol birbirinin zorunlu önkoşulu değildir.
+
+## Video akışları (0.3.0)
+
+- Sol menüden **Tüm yeni videolar**, **Video panosu** veya bir **grup** seçin.
+- **Yeni videoları getir**: Sunucusuz, yerel önbellekli YouTube Atom yayınlarıyla kanalların son videolarını toplar. OAuth veya Google Cloud gerekmez.
+- Bir gruptan seçilen videolar oynatıcıda veya **YouTube'da aç** bağlantısından izlenebilir. Pano her grup için altı yeni video gösterir.
+- **Shorts gizle**, **Canlı yayınları gizle**, **İzlediklerimi gizle**, tarih ve metin araması uygulanır.
+- **İzledim** düğmesi yerel olarak kaydeder. YouTube sitesinde normal video oynatıcısında belirli bir ilerlemeye ulaşan videolar da otomatik işaretlenir. YouTube hesap izleme geçmişinin tamamını okuma iddiası yoktur. Gömülü oynatıcıda otomatik işaretleme yapılmaz; **İzledim** düğmesini kullanın.
+
+### Kaynaklar ve dürüst sınırlamalar
+
+Kanalın `UC...` kimliğinden türetilmiş `UULF` (normal), `UUSH` (Shorts) ve `UULV` (canlı yayın) Atom yayınları kullanılır. **Bunlar YouTube'un belgelenmiş, kararlı bir API'si değildir.** Erişilemeyen türler genel kanal yayınıyla tamamlanır ve türü doğrulanamayan içerikler **Türü belirsiz** olarak gösterilir; Shorts ve canlı filtreleri belirsiz içerikleri yanlışlıkla gizlemez. Bu yüzden filtrelerin %100 kusursuz olması garanti edilemez. UULV içeriği canlı yayın kayıtlarını da içerebilir, yalnızca o anda canlı olan yayınlar değildir.
+
+Yayınlar sınırlı sayıda güncel video sağlar; bütün YouTube arşivi veya hesap öneri akışı değildir. Önbellek 30 dakika boyunca yeniden indirilmez. Bir yenilemede en çok 80 henüz taze olmayan kanal taranır; çok fazla aboneniz varsa **Yeni videoları getir** düğmesine yeniden basarak diğer kanalları tamamlayın. Hatalı ağ yanıtları var olan geçerli video kayıtlarını silmez.
+
+YouTube arayüzünde sağlanan bağlantılar gruba özel TubeShelf video akışını açar. Videonun YouTube'da yeni sekmede açılması halinde YouTube kendi öneri akışını gösterebilir; TubeShelf bu akışı değiştirmez.

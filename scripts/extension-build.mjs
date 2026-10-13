@@ -5,10 +5,11 @@ for(const name of ["background","content"]){
 }
 const oauthId=process.env.YOUTUBE_OAUTH_CLIENT_ID?.trim();
 const manifest={
- manifest_version:3,name:"TubeShelf – YouTube Subscription Manager",short_name:"TubeShelf",version:"0.2.0",
+ manifest_version:3,name:"TubeShelf – YouTube Subscription Manager",short_name:"TubeShelf",version:"0.3.0",
  description:"YouTube aboneliklerini gruplara ayır; yerel olarak sakla.",
  permissions:["storage","identity","alarms"],
  host_permissions:["https://www.youtube.com/*","https://www.googleapis.com/*"],
+ content_security_policy:{extension_pages:"script-src 'self'; object-src 'self'; frame-src https://www.youtube-nocookie.com https://www.youtube.com"},
  action:{default_title:"TubeShelf panelini aç"},
  background:{service_worker:"background.js"},
  content_scripts:[{matches:["https://www.youtube.com/*"],js:["content.js"],run_at:"document_idle"}]

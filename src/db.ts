@@ -1,10 +1,12 @@
 import type {Catalog} from "./types";
 import {emptyCatalog} from "./groups";
 const DB_NAME="tubeshelf", STORE="catalog";
-function connect():Promise<IDBDatabase> {
+export function connect():Promise<IDBDatabase> {
  return new Promise((resolve,reject)=>{
-  const req=indexedDB.open(DB_NAME,1);
-  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};
+  const req=indexedDB.open(DB_NAME,2);
+  req.onupgradeneeded=()=>{
+   for(const store of [STORE,"feeds","watched"])if(!req.result.objectStoreNames.contains(store))req.result.createObjectStore(store);
+  };
   req.onsuccess=()=>resolve(req.result);
   req.onerror=()=>reject(req.error??new Error("Veritabanı açılamadı."));
  });

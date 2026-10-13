@@ -2,13 +2,14 @@ import {useMemo,useState} from "react";
 import type {Catalog,Group} from "./types";
 import {groupChannelCounts} from "./groups";
 interface Props {
- catalog:Catalog; active:string|null; onSelect:(id:string|null)=>void;
+ catalog:Catalog; active:string|null;view:"feed"|"board"|"manage"; onSelect:(id:string|null)=>void;
+ onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
  onCreate:(name:string,parentId:string|null)=>void;
  onRename:(id:string,name:string)=>void; onDelete:(id:string)=>void;
  onDropChannel:(groupId:string,channelId:string)=>void;
  onMoveGroup:(id:string,parentId:string|null)=>void;
 }
-export function Sidebar({catalog,active,onSelect,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
+export function Sidebar({catalog,active,view,onSelect,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
  const [name,setName]=useState(""),[asRoot,setAsRoot]=useState(false);
  const counts=useMemo(()=>groupChannelCounts(catalog),[catalog]);
  function create(e:React.FormEvent){
@@ -43,7 +44,9 @@ export function Sidebar({catalog,active,onSelect,onCreate,onRename,onDelete,onDr
  return <aside className="sidebar">
   <div className="brand"><div className="brand-mark">▶</div><div><strong>TubeShelf</strong><small>Abonelik yöneticisi</small></div></div>
   <div className="nav-label">KÜTÜPHANE</div>
-  <button className={"all-button "+(active===null?"active":"")} onClick={()=>onSelect(null)}>◫ <span>Tüm kanallar</span><small>{catalog.channels.length}</small></button>
+  <button className={"all-button "+(view==="board"?"active":"")} onClick={onBoard}>▦ <span>Video panosu</span></button>
+  <button className={"all-button "+(view==="feed"&&active===null?"active":"")} onClick={onFeed}>▶ <span>Tüm yeni videolar</span></button>
+  <button className={"all-button "+(view==="manage"&&active===null?"active":"")} onClick={onManage}>◫ <span>Kanal yönetimi</span><small>{catalog.channels.length}</small></button>
   <div className="nav-label with-gap group-root-drop"
    onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-tubeshelf-group"))e.preventDefault();}}
    onDrop={e=>{e.preventDefault();const id=e.dataTransfer.getData("application/x-tubeshelf-group");if(id)onMoveGroup(id,null);}}>

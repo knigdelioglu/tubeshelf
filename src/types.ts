@@ -16,5 +16,5 @@ export type Request =
 | {type:"CATALOG_RESTORE";backup:unknown}
 | {type:"SUBSCRIPTIONS_SYNC"}
 | {type:"SUBSCRIPTIONS_SYNC_AUTO"}
-| {type:"OPEN_DASHBOARD";groupId?:string};
+| {type:"OPEN_DASHBOARD";groupId?:string;view?:"feed"|"board"};
 export type Response = {ok:true;catalog:Catalog}|{ok:false;error:string};

@@ -1,3 +1,5 @@
+import {videoAction} from "./video-service";
+import type {VideoRequest} from "./video-types";
 import type {Request,Response} from "./types";
 import {handle} from "./service";
 chrome.action.onClicked.addListener(()=>{
@@ -14,6 +16,11 @@ async function directSession(sender:chrome.runtime.MessageSender,token?:string){
 }
 chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:unknown)=>void)=>{
  if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED")return false;
+ if(raw.type==="VIDEO_GET"||raw.type==="VIDEO_REFRESH"||raw.type==="VIDEO_WATCHED_SET"){
+  void videoAction(raw as VideoRequest).then(sendResponse).catch(err=>
+   sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
+  return true;
+ }
  const message=raw as DirectMessage;
  if(message.type==="DIRECT_IMPORT_READY"){
   void directSession(sender).then(async session=>{

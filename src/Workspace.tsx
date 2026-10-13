@@ -4,8 +4,10 @@ import {ChannelList} from "./ChannelList";
 import {channelsInGroup} from "./groups";
 import type {useCatalog} from "./useCatalog";
 import type {DirectImportStatus} from "./types";
-interface Props {state:ReturnType<typeof useCatalog>;current:string|null;choose:(id:string|null)=>void}
-export function Workspace({state:s,current,choose}:Props){
+import {VideoWorkspace} from "./VideoWorkspace";
+interface Props {state:ReturnType<typeof useCatalog>;current:string|null;choose:(id:string|null)=>void;
+ view:"feed"|"board"|"manage";navigate:(view:"feed"|"board"|"manage",groupId:string|null)=>void}
+export function Workspace({state:s,current,choose,view,navigate}:Props){
  const c=s.catalog!;
  const autoConfigured=Boolean(chrome.runtime.getManifest().oauth2?.client_id);
  const [autoSync,setAutoSync]=useState(false);
@@ -54,6 +56,12 @@ export function Workspace({state:s,current,choose}:Props){
   });
  }
  return <main className="main">
+  <nav className="view-switcher" aria-label="TubeShelf bölümleri">
+   <button className={view==="feed"?"active":""} onClick={()=>navigate("feed",current)}>▶ Video akışı</button>
+   <button className={view==="board"?"active":""} onClick={()=>navigate("board",null)}>▦ Video panosu</button>
+   <button className={view==="manage"?"active":""} onClick={()=>navigate("manage",current)}>☷ Kanal yönetimi</button>
+  </nav>
+  {view==="manage"?<>
   <Toolbar total={c.channels.length} groups={c.groups.length} query={query} showInactive={showInactive}
    busy={s.busy} notice={preferenceError||s.notice} error={Boolean(preferenceError)||s.error} lastSync={c.lastSyncedAt}
    directStatus={directStatus} directImport={()=>{void s.run({type:"DIRECT_IMPORT_START"},"YouTube abonelikler sayfası açılıyor.");}}
@@ -71,5 +79,7 @@ export function Workspace({state:s,current,choose}:Props){
    }}
    onMore={()=>setLimit(x=>x+200)} canMore={limit<filtered.length}
   />
+  </>:<VideoWorkspace catalog={c} groupId={view==="feed"?current:null} mode={view==="feed"?"feed":"board"}
+   onOpenGroup={id=>navigate("feed",id)}/>}
  </main>;
 }

@@ -1,12 +1,12 @@
 import {scanSubscriptions} from "./direct-import";
 import type {Catalog} from "./types";
-import {channelsInGroup} from "./groups";
+import {groupChannelCounts} from "./groups";
 let host:HTMLElement|null=null, timer:number|undefined;
 function button(text:string,onClick:()=>void):HTMLButtonElement{
  const el=document.createElement("button");el.textContent=text;el.addEventListener("click",onClick);return el;
 }
 function open(groupId?:string):void{
- void chrome.runtime.sendMessage({type:"OPEN_DASHBOARD",...(groupId?{groupId}:{})});
+ void chrome.runtime.sendMessage({type:"OPEN_DASHBOARD",view:groupId?"feed":"board",...(groupId?{groupId}:{})});
 }
 function target():Element|null{
  return document.querySelector("ytd-guide-renderer #sections")??document.querySelector("#guide-content #sections");
@@ -34,10 +34,11 @@ async function refresh():Promise<void>{
   shadow.append(button("▦  TubeShelf",()=>open()));
   shadow.lastElementChild?.classList.add("top");
   const groups=response.catalog.groups.slice(0,12);
+  const counts=groupChannelCounts(response.catalog);
   for(const group of groups){
    let level=0,parent=group.parentId;
    while(parent&&level<4){level++;parent=response.catalog.groups.find(g=>g.id===parent)?.parentId??null;}
-   const count=channelsInGroup(response.catalog,group.id).size;
+   const count=counts.get(group.id)??0;
    const item=button("📁 "+group.name+" ("+count+")",()=>open(group.id));
    item.style.paddingLeft=String(10+level*13)+"px";
    shadow.append(item);
@@ -70,3 +71,22 @@ async function beginDirectImport():Promise<void>{
  }catch{/* A normal YouTube visit should never display extension errors. */}
 }
 window.setTimeout(()=>{void beginDirectImport();},900);
+
+/** Local watch state, recorded only after actual playback progress in the main YouTube player. */
+const markedOnPage=new Set<string>();
+document.addEventListener("timeupdate",event=>{
+ const video=event.target;
+ if(!(video instanceof HTMLVideoElement)||!video.matches("video.html5-main-video"))return;
+ if(document.visibilityState!=="visible"||video.paused||video.seeking)return;
+ const path=location.pathname;
+ const id=path==="/watch"?new URLSearchParams(location.search).get("v"):
+  path.startsWith("/shorts/")?path.split("/")[2]:null;
+ if(!id||!/^[A-Za-z0-9_-]{11}$/.test(id)||markedOnPage.has(id))return;
+ const duration=Number.isFinite(video.duration)?video.duration:120;
+ const threshold=Math.min(30,Math.max(5,duration*0.25));
+ if(video.currentTime<threshold)return;
+ markedOnPage.add(id);
+ void chrome.runtime.sendMessage({type:"VIDEO_WATCHED_SET",videoId:id,watched:true}).catch(()=>{
+  markedOnPage.delete(id);
+ });
+},true);

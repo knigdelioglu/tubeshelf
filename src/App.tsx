@@ -4,20 +4,29 @@ import {Workspace} from "./Workspace";
 import {useCatalog} from "./useCatalog";
 export function App(){
  const s=useCatalog();
- const [active,setActive]=useState<string|null>(new URLSearchParams(location.hash.slice(1)).get("group"));
+ const initial=new URLSearchParams(location.hash.slice(1));
+ const [active,setActive]=useState<string|null>(initial.get("group"));
+ const [view,setView]=useState<"feed"|"board"|"manage">(
+  initial.get("view")==="feed"||initial.get("view")==="board"?initial.get("view") as "feed"|"board":"board"
+ );
  const c=s.catalog;
  const current=c?.groups.some(g=>g.id===active)?active:null;
- function choose(id:string|null){
-  setActive(id);s.setSelected(new Set());
-  history.replaceState(null,"",id?"#group="+encodeURIComponent(id):location.pathname);
+ function navigate(nextView:"feed"|"board"|"manage",groupId:string|null=active){
+  setActive(groupId);setView(nextView);s.setSelected(new Set());
+  const params=new URLSearchParams({view:nextView});
+  if(groupId)params.set("group",groupId);
+  history.replaceState(null,"","#"+params.toString());
  }
+ function choose(id:string|null){navigate(id?"feed":"manage",id);}
  if(!c)return <main className="loading"><strong>TubeShelf</strong><p>{s.notice||"Kütüphane yükleniyor…"}</p></main>;
  return <div className="app-shell">
-  <Sidebar catalog={c} active={current} onSelect={choose}
+  <Sidebar catalog={c} active={current} view={view}
+   onSelect={choose} onBoard={()=>navigate("board",null)}
+   onFeed={()=>navigate("feed",null)} onManage={()=>navigate("manage",null)}
    onCreate={(name,parentId)=>{
     const existing=new Set(c.groups.map(g=>g.id));
     void s.run({type:"GROUP_CREATE",name,parentId},"Grup oluşturuldu.").then(next=>{
-     const added=next?.groups.find(g=>!existing.has(g.id));if(added)choose(added.id);
+     const added=next?.groups.find(g=>!existing.has(g.id));if(added)navigate("manage",added.id);
     });
    }}
    onRename={(id,name)=>{void s.run({type:"GROUP_RENAME",id,name});}}
@@ -27,6 +36,6 @@ export function App(){
     void s.run({type:"MEMBERSHIP_SET",groupId,channelIds:[channelId],enabled:true},"Kanal gruba eklendi.");
    }}
   />
-  <Workspace state={s} current={current} choose={choose}/>
+  <Workspace state={s} current={current} choose={choose} view={view} navigate={navigate}/>
  </div>;
 }

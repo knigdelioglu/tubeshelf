@@ -45,7 +45,9 @@ export async function handle(message:Request):Promise<Catalog>{
    return serialized(readCatalog);
   }
   case "OPEN_DASHBOARD":{
-   await chrome.tabs.create({url:chrome.runtime.getURL("index.html")+(message.groupId?"#group="+encodeURIComponent(message.groupId):"")});
+   const params=new URLSearchParams({view:message.view==="feed"?"feed":"board"});
+   if(message.groupId)params.set("group",message.groupId);
+   await chrome.tabs.create({url:chrome.runtime.getURL("index.html")+"#"+params.toString()});
    return serialized(readCatalog);
   }
   case "CATALOG_IMPORT":
