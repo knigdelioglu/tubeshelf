@@ -32,7 +32,8 @@ export function QueueWorkspace(){
   function keys(e:KeyboardEvent){
    const t=e.target;
    if(e.ctrlKey||e.metaKey||e.altKey||t instanceof HTMLInputElement||t instanceof HTMLTextAreaElement||
-      t instanceof HTMLSelectElement||(t instanceof HTMLElement&&t.isContentEditable))return;
+      t instanceof HTMLSelectElement||(t instanceof HTMLElement&&
+      (t.isContentEditable||Boolean(t.closest("button,a,[role=button]")))))return;
    const key=e.key.toLowerCase();
    if(key==="escape"){setPlaying(null);return;}
    if(key==="j"){e.preventDefault();setIndex(n=>Math.min(state.queue.length-1,Math.max(0,n+1)));}
@@ -120,7 +121,12 @@ export function QueueWorkspace(){
      <p>Gömülü videonun ilerlemesi otomatik ölçülemez. YouTube'da açarak ilerlemeyi kaydedebilirsin.</p>
      <button onClick={()=>{void action({type:"WATCH_COMPLETE",videoId:playing.id});
       setPlaying(null);}}>✓ Tamamlandı</button>
-     <button onClick={()=>{setPlaying(null);setIndex(n=>Math.min(state.queue.length-1,n+1));}}>Sonraki →</button>
+     <button disabled={state.queue.findIndex(v=>v.id===playing.id)>=state.queue.length-1}
+      onClick={()=>{
+       const nextIndex=state.queue.findIndex(v=>v.id===playing.id)+1;
+       const next=state.queue[nextIndex];
+       if(next){setIndex(nextIndex);setPlaying(next);}
+      }}>Sonraki →</button>
      <a href={resumeUrl(playing,progress.get(playing.id))} target="_blank" rel="noopener noreferrer">YouTube'da devam et ↗</a>
     </div>
    </div>
