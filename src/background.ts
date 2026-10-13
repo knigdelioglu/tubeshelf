@@ -1,3 +1,5 @@
+import {smartAction,announceSmartChange} from "./smart-service";
+import type {SmartVideoRequest} from "./smart-types";
 import {videoAction} from "./video-service";
 import type {VideoRequest} from "./video-types";
 import type {Request,Response} from "./types";
@@ -15,9 +17,18 @@ async function directSession(sender:chrome.runtime.MessageSender,token?:string){
  return session;
 }
 chrome.runtime.onMessage.addListener((raw:unknown,sender,sendResponse:(response:unknown)=>void)=>{
- if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED")return false;
+ if(!raw||typeof raw!=="object"||!("type" in raw)||typeof raw.type!=="string"||raw.type==="CATALOG_CHANGED"||raw.type==="SMART_UPDATED")return false;
+ if(raw.type==="SMART_FEED_GET"||raw.type==="SMART_FEED_REFRESH"||
+    raw.type==="SMART_READ_SET"||raw.type==="SMART_READ_ALL"||raw.type==="SMART_MUTE_SET"){
+  void smartAction(raw as SmartVideoRequest).then(sendResponse).catch(err=>
+   sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
+  return true;
+ }
  if(raw.type==="VIDEO_GET"||raw.type==="VIDEO_REFRESH"||raw.type==="VIDEO_WATCHED_SET"){
-  void videoAction(raw as VideoRequest).then(sendResponse).catch(err=>
+  void videoAction(raw as VideoRequest).then(response=>{
+   if(raw.type==="VIDEO_WATCHED_SET"&&response.ok)announceSmartChange();
+   sendResponse(response);
+  }).catch(err=>
    sendResponse({ok:false,error:err instanceof Error?err.message:String(err)}));
   return true;
  }
@@ -81,3 +92,29 @@ chrome.alarms.onAlarm.addListener(alarm=>{
 });
 // An alarm can be dropped during extension updates or browser restarts.
 void configureAutomaticSync().catch(()=>undefined);
+
+const SMART_ALARM="tubeshelf-smart-refresh";
+async function configureSmartRefresh():Promise<void>{
+ const {smartAutoRefreshEnabled}=await chrome.storage.local.get("smartAutoRefreshEnabled");
+ if(smartAutoRefreshEnabled===true){
+  if(!await chrome.alarms.get(SMART_ALARM))await chrome.alarms.create(SMART_ALARM,{periodInMinutes:60});
+ }else await chrome.alarms.clear(SMART_ALARM);
+}
+chrome.runtime.onStartup.addListener(()=>{void configureSmartRefresh();});
+chrome.runtime.onInstalled.addListener(()=>{void configureSmartRefresh();});
+chrome.storage.onChanged.addListener((changes,area)=>{
+ if(area==="local"&&"smartAutoRefreshEnabled" in changes)void configureSmartRefresh();
+});
+chrome.alarms.onAlarm.addListener(alarm=>{
+ if(alarm.name!==SMART_ALARM)return;
+ void (async()=>{
+  const {smartAutoRefreshEnabled}=await chrome.storage.local.get("smartAutoRefreshEnabled");
+  if(smartAutoRefreshEnabled!==true)return;
+  const result=await smartAction({type:"SMART_FEED_REFRESH",groupId:null});
+  if(!result.ok)throw new Error(result.error);
+  await chrome.storage.local.remove("smartRefreshError");
+ })().catch(async e=>{
+  await chrome.storage.local.set({smartRefreshError:e instanceof Error?e.message:"Yenileme başarısız."});
+ });
+});
+void configureSmartRefresh().catch(()=>undefined);

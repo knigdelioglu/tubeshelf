@@ -58,3 +58,39 @@
 .video-modal-actions button,.video-modal-actions a{padding:8px;border-radius:7px;border:1px solid #dae0e6;background:#f5f7f9;color:#333;text-decoration:none}
 @media(max-width:680px){.board-grid{grid-template-columns:1fr}.board-section .video-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.video-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.video-info h3{font-size:12px}}
 @media(prefers-color-scheme:dark){.view-switcher{border-color:#343a44}.view-switcher button,.video-filters,.video-card,.board-section,.video-empty,.video-modal{background:#24272d;border-color:#3b424b;color:#e5e7ec}.video-info p,.video-meta,.video-filters label,.board-title small{color:#abb3c1}.video-actions button,.video-modal-actions button,.video-modal-actions a{background:#333943;color:#e5e9f0;border-color:#505864}.video-empty strong{color:#e5e7ec}.feed-details{background:#383127;border-color:#514334}.video-modal-actions p{color:#b3bdca}}
+
+/* Smart Feed v0.4 - maintains TubeShelf's shared light/dark design language */
+.unread-pill{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;margin-left:5px;border-radius:10px;background:#d63a3a;color:#fff;font-size:11px;font-weight:750;flex-shrink:0}
+.smart-workspace .videos-heading{margin-bottom:18px}
+.smart-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:13px}
+.smart-stats>div{background:#fff;border:1px solid #e3e6ec;border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:6px}
+.smart-stats strong{font-size:23px;letter-spacing:-.5px}
+.smart-stats span{color:#7f8792;font-size:11px}
+.smart-actions{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:0 0 14px}
+.smart-actions button{border:1px solid #d9dce3;border-radius:9px;padding:10px 12px;background:#fff;color:inherit;font-weight:600}
+.smart-actions label{font-size:12px;display:flex;align-items:center;gap:8px;color:#606c7b}
+.smart-actions input{accent-color:#db3636}
+.smart-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:10px;padding:16px;background:#fff;border:1px solid #e3e6ec;border-radius:12px}
+.smart-filters label{min-width:0;font-size:11px;color:#78818d;font-weight:600}
+.smart-filters input,.smart-filters select{width:100%;min-width:0;min-height:38px;margin-top:6px;padding:8px;background:#f9fafc;color:#303944;border:1px solid #e1e3ea;border-radius:8px;font:inherit;font-size:12px}
+.smart-filters button{border:1px solid #dce0e5;border-radius:8px;background:#f3f4f7;color:#535b68;align-self:end;padding:10px 7px}
+.smart-muted{margin-top:12px;padding:12px;border:1px solid #e0e4ea;border-radius:9px;background:#fff;color:#56606e;font-size:12px}
+.smart-muted summary{cursor:pointer;font-weight:700}
+.smart-muted p{line-height:1.6;color:#818996}
+.mute-pick{display:flex;gap:8px;margin:12px 0}
+.mute-pick select{min-width:0;flex:1;border:1px solid #ddd;border-radius:6px;padding:8px}
+.mute-pick button,.mute-row button{border:1px solid #dedee2;border-radius:7px;background:#f4f5f8;color:inherit;padding:8px}
+.mute-row{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #eceef0;padding:8px 0}
+.new-dot{position:absolute;top:7px;left:8px;color:#fff;background:#de3838;font-size:10px;letter-spacing:.4px;font-weight:800;padding:4px 7px;border-radius:6px}
+.smart-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.smart-card-actions button,.smart-card-actions a{font-size:10px;text-decoration:none;color:#46515e;border:1px solid #e2e4ea;background:#f7f8fb;border-radius:6px;padding:7px 6px}
+.smart-card-actions a{color:#bf3c3c;font-weight:700}
+.smart-disclaimer{font-size:12px;color:#85909d;line-height:1.5;margin:20px 0}
+@media(max-width:820px){.smart-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.smart-stats>div{padding:12px}}
+@media(prefers-color-scheme:dark){
+ .smart-stats>div,.smart-filters,.smart-muted{background:#24272d;color:#e5eaf2;border-color:#3a4049}
+ .smart-stats span,.smart-filters label,.smart-muted p,.smart-disclaimer{color:#a0aab9}
+ .smart-filters input,.smart-filters select,.smart-filters button,.smart-card-actions button,.smart-card-actions a,.smart-actions button,.mute-pick select,.mute-pick button,.mute-row button{
+  background:#30343d;color:#e2e7ed;border-color:#454c58}
+ .smart-actions label{color:#b5bfcc}.mute-row{border-color:#444b55}
+}

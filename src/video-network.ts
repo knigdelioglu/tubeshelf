@@ -47,12 +47,12 @@ export async function loadChannelVideos(channel:Channel,previous?:ChannelVideoCa
   }
   if(!parts.length)throw new Error("YouTube kanala ait yayın döndürmedi.");
   const videos=mergeFeedKinds(parts).slice(0,75);
-  return {channelId:channel.id,canonicalId:id,updatedAt:fetchedAt,videos,
+  return {channelId:channel.id,canonicalId:id,updatedAt:fetchedAt,attemptedAt:fetchedAt,consecutiveFailures:0,videos,
    ...(missing.length?{error:"Bazı video türleri doğrulanamadı: "+missing.join(", ")}:{})};
  }catch(e){
   if(previous?.videos.length){
-   return {...previous,error:e instanceof Error?e.message:String(e)};
+   return {...previous,attemptedAt:fetchedAt,consecutiveFailures:(previous.consecutiveFailures??0)+1,error:e instanceof Error?e.message:String(e)};
   }
-  return {channelId:channel.id,updatedAt:fetchedAt,videos:[],error:e instanceof Error?e.message:String(e)};
+  return {channelId:channel.id,updatedAt:"",attemptedAt:fetchedAt,consecutiveFailures:(previous?.consecutiveFailures??0)+1,videos:[],error:e instanceof Error?e.message:String(e)};
  }
 }

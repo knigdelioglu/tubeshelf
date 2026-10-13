@@ -1,6 +1,6 @@
 # TubeShelf
 
-**v0.3.0 — Video akışları, Shorts/canlı filtreleri, yerel izleme durumu, grup panosu**
+**v0.4.0 — Akıllı Akış: gelen kutusu, yeni video sayaçları, kayıtlı filtreler, kanal sessize alma ve kontrollü yenileme**
 
 **Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
@@ -98,3 +98,14 @@ Kanalın `UC...` kimliğinden türetilmiş `UULF` (normal), `UUSH` (Shorts) ve `
 Yayınlar sınırlı sayıda güncel video sağlar; bütün YouTube arşivi veya hesap öneri akışı değildir. Önbellek 30 dakika boyunca yeniden indirilmez. Otomatik açılış taramasında en çok 50 henüz taze olmayan kanal taranır; çok fazla aboneniz varsa **Yeni videoları getir** düğmesine yeniden basarak en eski kontrol edilmiş diğer kanalları tarayabilirsiniz. Bu düğme önbellek süresi dolmasa bile yeniler. Hatalı ağ yanıtları var olan geçerli video kayıtlarını silmez.
 
 YouTube arayüzünde sağlanan bağlantılar gruba özel TubeShelf video akışını açar. Videonun YouTube'da yeni sekmede açılması halinde YouTube kendi öneri akışını gösterebilir; TubeShelf bu akışı değiştirmez.
+
+## Akıllı Akış (v0.4.0)
+
+- **Gelen kutusu:** İlk kullanımda oluşturulan yerel başlangıç zamanından **sonra yayımlanmış** ve okunmamış/izlenmemiş son videoları gösterir. Önceki abonelik arşivi topluca `yeni` olarak sayılmaz. Sayaçlar YouTube'un resmî bildirim sayısı değil, **TubeShelf'ün yerel önbelleğindeki erişilebilen yeni videoların sayısıdır**.
+- **Sayaçlar:** Gelen kutusu ve her grupta (alt grupları kapsayarak, yinelenen videoları tek sayarak) gösterilir. Okundu veya izlendi işaretlemek sayacı günceller. **Bu akıştaki yenileri okundu işaretle** bütün eldeki görünür yeni videoları topluca işaretler.
+- **Filtreler:** Kanal, arama, tarih (24 saat/7/30 gün), içerik türü, okunma, izleme, sıralama. Filtreler **görünüm/grup bazında** otomatik kaydedilir, yeniden açınca geri gelir; tek tıkla sıfırlanabilir. Video süreleri Atom yayınında güvenilir gelmediğinden süre filtresi eklenmedi.
+- **Sessiz kanal:** Akış kartından veya **Sessize alınan kanallar** bölümünden bir kanalı sessize alabilir ve yeniden açabilirsin. YouTube aboneliği, kanal ve grup üyeliği silinmez.
+- **Yenileme:** İstekler küçük partilere (12 kanal/tur, en fazla 3 eş zamanlı kanal) ayrıldı. Kanal başına tekrar denemeler hatadan sonra artan beklemeye tabi. Başarısız tarama mevcut video kayıtlarını silmez. **Yeni videoları getir** önbelleği zorlayabilir, ancak geçici hata beklemesini aşmaz.
+- **İsteğe bağlı saatlik kontrol:** Tarayıcı açıkken Chrome alarm sistemiyle otomatik bir parti yenilenir. Devamlı çalışan haricî sunucu yoktur. Sessize alınan kanallar ağ taramasından çıkarılır.
+
+**Teknik sınırlar:** Resmî olmayan YouTube kategori Atom yayınları ve genel Atom feed'i her zaman erişilebilir değildir; YouTube değişikliklerinde video kapsamı ve türü eksik kalabilir. İlk kullanım zaman damgasından önce yayımlanmış videolar gelen kutusunda yeni sayılmaz. Kalıcı izleme/okunma/sessiz kanal verileri tarayıcıdaki IndexedDB'dedir; mevcut JSON grup yedeği bu yeni ayarları kapsamaz. Bunların kapsamlı yedeklenmesi sonraki geliştirme konusu.

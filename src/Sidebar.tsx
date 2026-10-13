@@ -1,17 +1,56 @@
-import {useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import type {Catalog,Group} from "./types";
 import {groupChannelCounts} from "./groups";
+import type {SmartFeed} from "./smart-types";
 interface Props {
- catalog:Catalog; active:string|null;view:"feed"|"board"|"manage"; onSelect:(id:string|null)=>void;
- onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
+ catalog:Catalog; active:string|null;view:"inbox"|"feed"|"board"|"manage"; onSelect:(id:string|null)=>void;
+ onInbox:()=>void;onBoard:()=>void;onFeed:()=>void;onManage:()=>void;
  onCreate:(name:string,parentId:string|null)=>void;
  onRename:(id:string,name:string)=>void; onDelete:(id:string)=>void;
  onDropChannel:(groupId:string,channelId:string)=>void;
  onMoveGroup:(id:string,parentId:string|null)=>void;
 }
-export function Sidebar({catalog,active,view,onSelect,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
+export function Sidebar({catalog,active,view,onSelect,onInbox,onBoard,onFeed,onManage,onCreate,onRename,onDelete,onDropChannel,onMoveGroup}:Props){
  const [name,setName]=useState(""),[asRoot,setAsRoot]=useState(false);
  const counts=useMemo(()=>groupChannelCounts(catalog),[catalog]);
+ const [cachedFeed,setCachedFeed]=useState<SmartFeed|null>(null);
+ useEffect(()=>{
+  let active=true;
+  function refresh(){
+   void chrome.runtime.sendMessage({type:"SMART_FEED_GET",groupId:null}).then((result:unknown)=>{
+    const response=result as {ok:boolean;feed?:SmartFeed};
+    if(active&&response.ok&&response.feed)setCachedFeed(response.feed);
+   }).catch(()=>undefined);
+  }
+  refresh();
+  const listener=(raw:unknown)=>{
+   if(raw&&typeof raw==="object"&&"type" in raw&&raw.type==="SMART_UPDATED")refresh();
+   return false;
+  };
+  chrome.runtime.onMessage.addListener(listener);
+  return ()=>{active=false;chrome.runtime.onMessage.removeListener(listener);};
+ },[catalog.revision]);
+ const unreadByGroup=useMemo(()=>{
+  const counts=new Map<string,number>();
+  const relations=new Map<string,string[]>();
+  const byId=new Map(catalog.groups.map(g=>[g.id,g]));
+  for(const m of catalog.memberships){
+   const groups=relations.get(m.channelId)??[];
+   groups.push(m.groupId);relations.set(m.channelId,groups);
+  }
+  for(const video of cachedFeed?.videos??[]){
+   if(!video.unread)continue;
+   const seen=new Set<string>();
+   for(const id of relations.get(video.channelId)??[]){
+    let current:string|null=id;
+    while(current&&!seen.has(current)){
+     seen.add(current);current=byId.get(current)?.parentId??null;
+    }
+   }
+   for(const id of seen)counts.set(id,(counts.get(id)??0)+1);
+  }
+  return counts;
+ },[catalog.groups,catalog.memberships,cachedFeed]);
  function create(e:React.FormEvent){
   e.preventDefault();if(!name.trim())return;
   onCreate(name,asRoot?null:active);setName("");
@@ -32,6 +71,7 @@ export function Sidebar({catalog,active,view,onSelect,onBoard,onFeed,onManage,on
     <button className="group-button" onClick={()=>onSelect(g.id)} title={g.name}>
      <span aria-hidden="true">▱</span><span className="ellipsis">{g.name}</span>
      <small>{counts.get(g.id)??0}</small>
+     {(unreadByGroup.get(g.id)??0)>0&&<span className="unread-pill" title="Önbellekteki yeni video">{unreadByGroup.get(g.id)}</span>}
     </button>
     {active===g.id&&<span className="group-actions">
      <button title="Yeniden adlandır" aria-label="Yeniden adlandır" onClick={()=>{const next=prompt("Yeni grup adı",g.name);if(next!==null)onRename(g.id,next);}}>✎</button>
@@ -44,8 +84,11 @@ export function Sidebar({catalog,active,view,onSelect,onBoard,onFeed,onManage,on
  return <aside className="sidebar">
   <div className="brand"><div className="brand-mark">▶</div><div><strong>TubeShelf</strong><small>Abonelik yöneticisi</small></div></div>
   <div className="nav-label">KÜTÜPHANE</div>
+  <button className={"all-button "+(view==="inbox"?"active":"")} onClick={onInbox}>
+   ◉ <span>Yeni videolar</span>{Boolean(cachedFeed?.unreadCount)&&<span className="unread-pill">{cachedFeed?.unreadCount}</span>}
+  </button>
   <button className={"all-button "+(view==="board"?"active":"")} onClick={onBoard}>▦ <span>Video panosu</span></button>
-  <button className={"all-button "+(view==="feed"&&active===null?"active":"")} onClick={onFeed}>▶ <span>Tüm yeni videolar</span></button>
+  <button className={"all-button "+(view==="feed"&&active===null?"active":"")} onClick={onFeed}>▶ <span>Tüm video akışı</span></button>
   <button className={"all-button "+(view==="manage"&&active===null?"active":"")} onClick={onManage}>◫ <span>Kanal yönetimi</span><small>{catalog.channels.length}</small></button>
   <div className="nav-label with-gap group-root-drop"
    onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-tubeshelf-group"))e.preventDefault();}}

@@ -6,7 +6,7 @@ export interface VideoItem {
 }
 export interface ChannelVideoCache {
  channelId:string;updatedAt:string;videos:VideoItem[];canonicalId?:string;
- error?:string;
+ error?:string;attemptedAt?:string;consecutiveFailures?:number;
 }
 export interface VideoFeedItem extends VideoItem {watched:boolean}
 export interface FeedSnapshot {
