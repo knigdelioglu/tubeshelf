@@ -1,5 +1,59 @@
 # TubeShelf
 
-Local-first YouTube subscription organizer for Chrome (Manifest V3).
+**Kişisel YouTube abonelik yöneticisi · Chrome Manifest V3 · TypeScript/React**
 
-Initial implementation in progress.
+TubeShelf, abonelikleri yerel gruplara ayırır. Kanallarınızı YouTube üzerinde değiştirmez; düzeninizi tarayıcı uzantısına ait IndexedDB'de saklar.
+
+## Kurulum
+
+Node.js 22+ gerekir.
+
+```bash
+npm install
+npm run verify
+```
+
+1. Chrome'da `chrome://extensions` sayfasını açın.
+2. **Geliştirici modu**nu etkinleştirin.
+3. **Paketlenmemiş öğe yükle** ile oluşan **dist/** klasörünü seçin.
+4. TubeShelf araç çubuğu simgesine tıklayıp yönetim panelini açın.
+5. YouTube sayfasını yenileyince sol menüde TubeShelf grupları görünür.
+
+Alternatif: GitHub Actions başarılı olduğunda `tubeshelf-chrome-unpacked` çıktısını indirip bir klasöre açın; bu klasörü yükleyin.
+
+## Abonelikleri içeri aktarma
+
+**API gerekmeden:** Google Takeout'tan YouTube aboneliklerinin `subscriptions.csv` dosyasını dışa aktarın. Panelde **CSV içe aktar** düğmesini kullanın. Kanal kimliği ve başlığı olan satırlar alınır; mükerrer kayıtlar atlanır.
+
+**İsteğe bağlı otomatik senkronizasyon:**
+
+1. İlk kez paketlenmemiş eklentiyi yükleyip `chrome://extensions` sayfasından **eklenti kimliğini** alın.
+2. Google Cloud Console'da YouTube Data API v3'ü etkinleştirin; OAuth izin ekranında `youtube.readonly` kapsamını yapılandırın ve gerekiyorsa kendinizi test kullanıcısı ekleyin.
+3. **Chrome Extension** türünde OAuth istemcisi oluşturun ve eklenti kimliğini girin.
+4. Terminalde `YOUTUBE_OAUTH_CLIENT_ID=CLIENT_ID npm run build` komutunu çalıştırın, uzantıyı yeniden yükleyin.
+5. **YouTube senkronize et** ile Google hesabınızdan okuma izni verin.
+
+Kimlik yapılandırılmadıysa eşitleme açık bir hata verir; CSV/grup yönetimi çalışmaya devam eder. Kimlik, giriş parolası veya erişim belirteci depoya eklenmez. Google'ın test modu ve yetkilendirme kısıtları geçerli olabilir.
+
+## Yapabilecekleriniz
+
+- Sınırsız grup ve alt grup (yerel güvenlik sınırı: 2000).
+- Tek kanalı birden çok gruba bağlama; toplu seçim ve gruba sürükle-bırak.
+- YouTube sol menüsünden gruplara hızlı erişim.
+- Yerel JSON yedeği ve doğrulamalı geri yükleme.
+- Abonelik senkronizasyonunda düzeni koruma: abonelikten çıkılan kanallar kayıtta kalır, varsayılan listede gizlenir.
+
+**Önemli:** Eklentiyi kaldırmak yerel veritabanını silebilir; düzenli olarak JSON yedeği indirin. Google Takeout içe aktarması tek seferliktir; otomatik eşitleme için yukarıdaki OAuth kurulumu gerekir.
+
+## Geliştirme
+
+- `npm run check`: TypeScript denetimi
+- `npm test`: Vitest
+- `npm run build`: yönetim paneli (Vite), bağımsız content script ve service worker (esbuild), Manifest V3
+- `npm run dev`: yalnızca arayüz geliştirme sunucusu; tarayıcı eklentisi API'leri bu sunucuda çalışmaz.
+
+**Kapsam:** Bu ilk aşama abonelik/grup yönetimidir. Grup bazlı güncel video akışı, Shorts filtreleri ve çok sütunlu pano sonraki aşamalardadır.
+
+## Gizlilik
+
+Veriler IndexedDB içinde, uzantı kökeninde saklanır. Otomatik senkronizasyon seçilirse YouTube Data API yalnızca abone olunan kanalları okumak için çağrılır. Sunucu, analiz hizmeti veya telemetri yoktur.
